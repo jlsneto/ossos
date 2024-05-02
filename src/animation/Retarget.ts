@@ -10,6 +10,8 @@ import Vec3                 from '../maths/Vec3';
 // #endregion
 
 // #region SUPPORT OBJECTS
+
+/** Links similar bones between two seperate skeletongs */
 class BoneLink{
     // #region MAIN
     srcIndex: number = -1;   // Bone index in source tpose
@@ -20,11 +22,18 @@ class BoneLink{
     qSrcToTar  = new Quat(); // Handles transformation from Src WS to Tar WS
     qTarParent = new Quat(); // Cache tpose parent ws rotation, to make it easy to transform Tar WS to Tar LS
 
-    constructor( srcIdx:number, tarIdx:number ){
-        this.srcIndex = srcIdx;
-        this.tarIndex = tarIdx;
+    constructor( srcIdx?:number, tarIdx?:number ){
+        if( srcIdx != null ) this.srcIndex = srcIdx;
+        if( tarIdx != null ) this.tarIndex = tarIdx;
     }
     // #endregion
+
+    // #region METHODS
+    fromBones( src: Bone, tar: Bone ): this{
+        this.srcIndex = src.index;
+        this.tarIndex = tar.index;
+        return this;
+    }
 
     bind( src: Pose, tar: Pose ): this{
         const srcBone = src.bones[ this.srcIndex ];
@@ -57,25 +66,102 @@ class BoneLink{
 
         return this;
     }
+    // #endregion
 }
+
 // #endregion
 
 export default class Retarget{
     // #region MAIN
     animator = new PoseAnimator();
     links    : Map<string, BoneLink> = new Map();
-    srcPose !: Pose;
-    tarPose !: Pose;
+    srcPose !: Pose;    // Starting "Pose" for both should be very similar for retargeting to work
+    tarPose !: Pose;    // ... a TPose is the most ideal pose for retargeting
 
-    srcHip   = new Vec3();
+    srcHip   = new Vec3();  // TODO, Need to handle Root bone too
     tarHip   = new Vec3();
     hipScale = 1;
     // #endregion
 
-    // #region BINDING
-    bindTPoses( src: Pose, tar: Pose ): this{
+    // #region METHODS
+
+    /** Set the tpose for both skeletons */
+    useTPoses( src: Pose, tar: Pose ): this{
+        // Clone the pose which will be used for targetting
+        // Do not want to damage the state of the poses being passed in.
+        this.srcPose = src.clone();
+        this.tarPose = tar.clone();
+
+        return this;
+    }
+
+    bindBone( srcName: string, tarName: string ): this{
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // Check if bones exists
+        const bSrc = this.srcPose.getBone( srcName );
+        const bTar = this.tarPose.getBone( tarName );
+        if( !bSrc || !bTar ){ console.log( 'Can not link bones', srcName, tarName ); return this; }
+
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // Binding between two bones
+        const lnk = new BoneLink()
+            .fromBones( bSrc, bTar )            // Save needed bone info
+            .bind( this.srcPose, this.tarPose ) // Compute Conversion Transform
+
+        this.links.set( window.crypto.randomUUID(), lnk );
+        return this;
+    }
+
+    bindBatch( ary: Array<{ src:string, tar:string, incPos ?: boolean }> ): this{
+        const pSrc = this.srcPose;
+        const pTar = this.tarPose;
+
+        let bSrc    : Bone | null;
+        let bTar    : Bone | null;
+        let lnk     : BoneLink;
+        let lnkName : string;
+
+        for( const i of ary ){
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // Check if bones exists
+            bSrc = pSrc.getBone( i.src );
+            bTar = pTar.getBone( i.tar );
+            if( !bSrc || !bTar ){ console.log( 'Can not link bones', i ); continue; }
+
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // Bind the two mirroring bones
+            lnk = new BoneLink()
+                .fromBones( bSrc, bTar )            // Save needed bone info
+                .bind( this.srcPose, this.tarPose ) // Compute Conversion Transform
+
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // TODO: this is a temp hack to support how to retarget the hip
+            // when it moves around. Need to revisit retargeting to try to support
+            // change in position but for now this will work for bipedal characters.
+            // Also note need to handle ROOT as well.
+            if( i.incPos === true ){
+                // Store hip Tpose world space position
+                this.srcHip.copy( bSrc.world.pos ).nearZero();
+                this.tarHip.copy( bTar.world.pos ).nearZero();
+    
+                // Retarget position scale from Source to target
+                this.hipScale = Math.abs( this.srcHip[1] / this.tarHip[1] );
+
+                lnkName = 'hip';
+            }else{
+                lnkName = window.crypto.randomUUID();
+            }
+
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            this.links.set( lnkName, lnk );
+        }
+       
+        return this;
+    }
+
+    autoBindTPoses( src: Pose, tar: Pose ): this{
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        // Close poses to reuse to work animation with
+        // Clone poses to reuse to work animation with
         this.srcPose = src.clone();
         this.tarPose = tar.clone();
 
@@ -144,6 +230,7 @@ export default class Retarget{
 
         return this;
     }
+
     // #endregion
 
     // #region CONTROL ANIMATION
