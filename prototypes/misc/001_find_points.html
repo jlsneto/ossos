@@ -1,0 +1,149 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title></title></head>
+<style>canvas{ display:block; } body, html { padding:0px; margin:0px; width:100%; height:100%; }</style>
+<body><script type="module">
+// #region IMPORTS
+import useThreeWebGL2, { useDarkScene, useVisualDebug } from '../_lib/useThreeWebGL2.js';
+
+import { Vec3 } from '../../src/index';
+// #endregion
+
+// #region MAIN
+let App = useDarkScene( useThreeWebGL2() );
+let Debug;
+let Ref = {};
+
+window.addEventListener( 'load', async _=>{
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Setup
+    App.sphericalLook( 0, 90, 6 );
+    Debug = await useVisualDebug( App );
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Debug.pnt.add( [0,0,0], 0x00ff00, 3 );
+
+    Ref.tester = new Tester();
+    Ref.tester.loadPoints( test01 );
+    // Ref.tester.loadPoints( test02 );
+    // Ref.tester.loadPoints( test03 );
+    Ref.tester.process().render();
+    
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    App.renderLoop();
+});
+// #endregion
+
+const test01 = [
+    [0,0,0],
+    [1,0,0],
+    [0,0,-1],
+    [-1,0,0],
+    [0,0,1],
+];
+
+const test02 = [
+    [0,0,0],
+    [0,0,-0.5],
+    [0,0,-1.0],
+    [0,0,-2.0],
+    [0.5,0,0.0],
+    [1.0,0,0.0],
+    [-0.5,0,0.0],
+    [-1.0,0,0.0],
+    [0,0,0.5],
+    [0,0,1.0],
+];
+
+
+const test03 = [
+    [-1,0,-1],
+    [0,0,-1],
+    [1,0,-1],
+
+    [-1,0,0],
+    [1,0,0],
+
+    [-1,0,1],
+    [0,0,1],
+    [1,0,1],
+];
+
+class Tester{
+    points  = [];
+    target  = new Vec3( 0.0, 0.0, 0 );
+    results = [];
+    min     = [0,0];
+    max     = [0,0];
+
+    constructor(){
+        const self = this;
+        window.addEventListener( 'keydown', e=>{
+            const s = 0.1;
+            switch( e.key ){
+                case 'ArrowRight'   : this.target[0] += s; break;
+                case 'ArrowLeft'    : this.target[0] -= s; break;
+                case 'ArrowUp'      : this.target[2] -= s; break;
+                case 'ArrowDown'    : this.target[2] += s; break;
+            }
+            self.process().render();
+        } );
+    }
+
+    hilitePoints( ary, c=0x00ffff ){
+        for( let p of ary ) Debug.pnt.add( p, c, 6, 7 );
+    }
+
+    process(){
+        const ox   = this.target[0];
+        const oz   = this.target[2];
+
+        const xMax = this.points.filter( i=>( i[0] >= ox ) ).reduce( (s,i)=>Math.min( s, i[0]), Infinity );
+        const xMin = this.points.filter( i=>( i[0] <= ox ) ).reduce( (s,i)=>Math.max( s, i[0]), -Infinity );
+        const zMax = this.points.filter( i=>( i[2] >= oz ) ).reduce( (s,i)=>Math.min( s, i[2]), Infinity );
+        const zMin = this.points.filter( i=>( i[2] <= oz ) ).reduce( (s,i)=>Math.max( s, i[2]), -Infinity );
+        
+        this.results = this.points.filter( i=>(
+            i[0] >= xMin && i[0] <= xMax &&
+            i[2] >= zMin && i[2] <= zMax
+        ));
+
+        this.min[ 0 ] = xMin;
+        this.min[ 1 ] = zMin;
+        this.max[ 0 ] = xMax;
+        this.max[ 1 ] = zMax;
+
+        // console.log( xMin, xMax, zMin, zMax );
+        // console.log( xMin, xMax );
+        return this;
+    }
+
+    loadPoints( ary ){
+        this.points.length = 0;
+        for( let i of ary ) this.points.push( new Vec3( i ) );
+        return this;
+    }
+
+    render(){
+        Debug.reset();
+
+        // Render all points
+        for( let p of this.points ) Debug.pnt.add( p, 0x808080, 3 );
+
+        // Render result points
+        for( let p of this.results ) Debug.pnt.add( p, 0x00ffff, 6, 7 );
+
+        // Render Target
+        Debug.pnt.add( this.target, 0xff6060, 3, 0 );
+
+        // Render Min Max Axes
+        const m0 = this.min;
+        const m1 = this.max;
+        
+        if( m0[0] !== -Infinity ) Debug.ln.add( [m0[0],0,-2.5], [m0[0],0,2.5], 0x666600 );
+        if( m1[0] !==  Infinity ) Debug.ln.add( [m1[0],0,-2.5], [m1[0],0,2.5], 0x666600 );
+
+        if( m0[1] !== -Infinity ) Debug.ln.add( [-2.5,0,m0[1]], [2.5,0,m0[1]], 0x666600 );
+        if( m1[1] !==  Infinity ) Debug.ln.add( [-2.5,0,m1[1]], [2.5,0,m1[1]], 0x666600 );
+    }
+}
+
+</script></body></html>

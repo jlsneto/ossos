@@ -22,6 +22,7 @@ export default class Armature{
 
     get boneCount(): number{ return this.poses.bind.bones.length; }
     
+    // TODO: Maybe a better way for quick qay to creates poses other then new Pose( Armature );
     newPose( saveAs ?: string ): Pose {
         const p = this.poses.bind.clone();
         if( saveAs ) this.poses[ saveAs ] = p;
@@ -107,7 +108,8 @@ export default class Armature{
     // #endregion
 
     // #region #COMPUTE
-    updateBoneLengths( pose: Pose, boneLen=0 ): this{
+    updateBoneLengths( _pose: Pose, boneLen=0.1 ): this{
+        const pose = _pose || this.poses.bind;
         const bEnd = pose.bones.length - 1;
         let b: Bone;
         let p: Bone;
