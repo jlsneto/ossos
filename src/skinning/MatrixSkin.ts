@@ -21,6 +21,7 @@ export default class MatrixSkin implements ISkin{
         const mat4Identity          = new Mat4();           // used to fill in buffer with default data
         const world: Array< Mat4 >  = new Array( bCnt );    // World space matrices
         const bind : Array< Mat4 >  = new Array( bCnt );    // bind pose matrices
+        const preBind               = new Mat4();           // Offset transform over the whole skeleton 
         
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         // Create Flat Buffer Space
@@ -39,6 +40,13 @@ export default class MatrixSkin implements ISkin{
         let b: Bone;
         let l: Transform;
         let m: Mat4 = new Mat4();
+
+        preBind.fromQuatTranScale(
+            bindPose.offset.rot,
+            bindPose.offset.pos,
+            bindPose.offset.scl,
+        );
+
         for( let i=0; i < bCnt; i++ ){
             b = bindPose.bones[ i ];
             l = b.local;
@@ -46,6 +54,7 @@ export default class MatrixSkin implements ISkin{
             
             m.fromQuatTranScale( l.rot, l.pos, l.scl );         // Local Space Matrix
             if( b.pindex !== -1 ) m.pmul( world[ b.pindex ] );  // Add Parent if Available
+            else                  m.pmul( preBind );
                                  
             bind[ i ].fromInvert( m );                          // Invert for Bind Pose
         }
