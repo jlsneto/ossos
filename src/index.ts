@@ -42,7 +42,8 @@ import Maths        from './maths/Maths';
 import Transform    from './maths/Transform';
 import Vec3         from './maths/Vec3';
 import Quat         from './maths/Quat';
-export { Maths, Transform, Vec3, Quat };
+import Mat4         from './maths/Mat4';
+export { Maths, Transform, Vec3, Quat, Mat4 };
 // #endregion
 
 // #region ANIMATION

@@ -1,0 +1,3 @@
+Very interesting idea, How about using a tree like structure
+to work out spring IK, along with using it to play with multi fabric IK
+https://x.com/GhislainGir/status/1787641702490026039

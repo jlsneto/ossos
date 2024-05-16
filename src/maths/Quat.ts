@@ -234,6 +234,35 @@ export default class Quat extends Array< number >{
         return this;
     }
 
+    /** order="YXZ", Values in Degrees, will be converted to Radians by function*/
+    fromEuler( x: ConstVec3 ) : Quat
+    fromEuler( x: number, y: number, z: number ) : Quat
+    fromEuler( x: number | ConstVec3, y ?: number, z ?: number ) : Quat{
+        let xx=0, yy=0, zz=0;
+
+        if( x instanceof Vec3 || x instanceof Float32Array || ( x instanceof Array && x.length == 3 )){
+            xx = x[ 0 ] * 0.01745329251 * 0.5;
+            yy = x[ 1 ] * 0.01745329251 * 0.5;
+            zz = x[ 2 ] * 0.01745329251 * 0.5;
+        }else if( typeof x === "number" && typeof y === "number" && typeof z === "number" ){
+            xx = x * 0.01745329251 * 0.5;
+            yy = y * 0.01745329251 * 0.5;
+            zz = z * 0.01745329251 * 0.5;
+        }
+
+        const c1 = Math.cos( xx ),
+              c2 = Math.cos( yy ),
+              c3 = Math.cos( zz ),
+              s1 = Math.sin( xx ),
+              s2 = Math.sin( yy ),
+              s3 = Math.sin( zz );
+        this[ 0 ] = s1 * c2 * c3 + c1 * s2 * s3;
+        this[ 1 ] = c1 * s2 * c3 - s1 * c2 * s3;
+        this[ 2 ] = c1 * c2 * s3 - s1 * s2 * c3;
+        this[ 3 ] = c1 * c2 * c3 + s1 * s2 * s3;
+        return this.norm();
+    }
+
     // /** Create a rotation from eye & target position */
     // lookAt(
     //   out: TVec4,
