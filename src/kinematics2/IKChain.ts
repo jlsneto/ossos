@@ -1,5 +1,5 @@
 // #region IMPORTS
-// import type Pose            from '../armature/Pose';
+import type Pose            from '../armature/Pose';
 import type Bone            from '../armature/Bone';
 
 import Vec3                 from '../maths/Vec3';
@@ -54,7 +54,7 @@ export class IKChain{
         // Compute the length of the chain by 
         // computing the IK length of each bone
         const li = bones.length - 1;
-        for( let i=1; i < li; i++ ){
+        for( let i=1; i <= li; i++ ){
             this.links[ i-1 ].len = Vec3.dist( bones[i].world.pos, bones[i-1].world.pos );
             this.len             += this.links[ i-1 ].len; // Only compute the length till the last bone
         }
@@ -66,6 +66,20 @@ export class IKChain{
         return this;
     }
     
+    /** Reset linked bones with the bind transfrom saved in the chain */
+    resetPoseLocal( pose: Pose, startIdx=0, endIdx=-1 ): this{
+        if( endIdx < 0 ) endIdx = this.links.length-1;
+
+        let lnk: IKLink;
+        for( let i=startIdx; i <= endIdx; i++ ){
+            lnk = this.links[ i ];
+            pose.bones[ lnk.index ]
+                .local.rot.copy( lnk.bind.rot );
+        }
+
+        return this;
+    }
+
     /** Simplify getting a pose bone. No index will return root bone */
     // getPoseBone( pose: Pose, idx: number = 0 ): Bone{ return pose.getBone( chain.links[ idx ].index ); }
 

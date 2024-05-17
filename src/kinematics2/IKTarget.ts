@@ -80,19 +80,18 @@ export default class IKTarget{
 
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         // Determine the Target pole in relation to chain's root
-
         // TODO, Need to handle when Pole Matches Direction
         switch( this.pMode ){
             // Position
-            case 0:
-                console.log( 'pMode 0 not implemented' );
-                // this.twist
-                //         .fromSub( this.polePos, this.startPos )
-                //         .alignTwist( this.swing, this.twist );
-                break;
+            case 0: this.twist
+                .fromSub( this.polePos, this.startPos )
+                .alignTwist( this.swing, this.twist )
+                .norm(); break;
 
             // Direction
-            case 1: this.twist.alignTwist( this.swing, this.twist ).norm(); break;
+            case 1: this.twist
+                .alignTwist( this.swing, this.twist )
+                .norm(); break;
         }
 
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

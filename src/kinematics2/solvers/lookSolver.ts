@@ -8,7 +8,7 @@ import Quat             from '../../maths/Quat';
 // #endregion
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export default function lookSolver( tar: IKTarget, chain: IKChain, pose: Pose, Debug: any ): void{
+export default function lookSolver( tar: IKTarget, chain: IKChain, pose: Pose, Debug ?: any ): void{
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // NOTE: A resolved target should have the WS transform of the root
     // bone and its parent. No need to recompute a common bit of info

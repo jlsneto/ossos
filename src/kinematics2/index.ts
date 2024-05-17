@@ -6,10 +6,14 @@ import { IKChain, IKLink }  from './IKChain';
 // #endregion
 
 // #region SOLVERS
-import lookSolver from './solvers/lookSolver'
+import lookSolver       from './solvers/lookSolver';
+import twoBoneSolver    from './solvers/twoBoneSolver';
+
+import limbSolver       from './compose/limbSolver';
 // #endregion
 
 export {
     BoneAxes, IKTarget, IKChain, IKLink,
-    lookSolver,
+    lookSolver, twoBoneSolver,
+    limbSolver,
 };
