@@ -8,23 +8,24 @@ import Vec3             from '../../maths/Vec3';
 import Quat             from '../../maths/Quat';
 // #endregion
 
-function lawcos_sss( aLen, bLen, cLen ){
+function lawcos_sss( aLen: number, bLen: number, cLen: number ): number{
     // Law of Cosines - SSS : cos(C) = (a^2 + b^2 - c^2) / 2ab
     // The Angle between A and B with C being the opposite length of the angle.
-    const v = ( aLen**2 + bLen**2 - cLen**2 ) / ( 2 * aLen * bLen );    
+    const v = ( aLen**2 + bLen**2 - cLen**2 ) / ( 2 * aLen * bLen );
     return Math.acos( Math.min( 1, Math.max( -1, v ) ) );  // Clamp to prevent NaN Errors
 }
 
-export default function twoBoneSolver( tar: IKTarget, chain: IKChain, pose: Pose ): void{
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export default function twoBoneSolver( tar: IKTarget, chain: IKChain, pose: Pose, debug: any ): void{
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // NOTE: Target already constaint the distance between the target and root bone.
     // This value can be used as the 3rd side of the triangle with the two bone lengths
     // being used as the 1st & 2nd side of the triangle for computing all the angles
 
-    // NOTE: Also, lookSolver should be run before this solver. That means the pose bone for 
+    // NOTE: Also, lookSolver should be run before this solver. That means the pose bone for
     // the root should have already been modified to point the bone at the target. We can save
     // one "getWorldRotation" call by taking the target's pworld.rot with root.local.rot
-    
+
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     const lnk0      = chain.links[ 0 ];
     const lnk1      = chain.links[ 1 ];
@@ -43,12 +44,12 @@ export default function twoBoneSolver( tar: IKTarget, chain: IKChain, pose: Pose
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // SECOND BONE
-    // Need to rotate from Right to Left, So take the angle and subtract it from 180 to rotate from 
+    // Need to rotate from Right to Left, So take the angle and subtract it from 180 to rotate from
     // the other direction. Ex. L->R 70 degrees == R->L 110 degrees
 
     const pRot  = pose.getWorldRotation( lnk1.pindex );                 // Need parent ws rotation
     rad	        = Math.PI - lawcos_sss( lnk0.len, lnk1.len, tar.dist ); // Bone's Angle
-    
+
     rot
         .fromMul( pRot, lnk1.bind.rot )   // Create unmodified ws rotation for bone 2
         .pmulAxisAngle( bendAxis, rad )   // Apply Bending Rotation

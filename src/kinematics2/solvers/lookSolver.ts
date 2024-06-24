@@ -7,7 +7,6 @@ import Vec3             from '../../maths/Vec3';
 import Quat             from '../../maths/Quat';
 // #endregion
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default function lookSolver( tar: IKTarget, chain: IKChain, pose: Pose, Debug ?: any ): void{
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // NOTE: A resolved target should have the WS transform of the root
@@ -28,9 +27,9 @@ export default function lookSolver( tar: IKTarget, chain: IKChain, pose: Pose, D
 
     if( Vec3.dot( tar.twist, twistDir ) < 0.999 ){
         const twistReset = new Quat().fromSwing( twistDir, tar.twist );
-        
+
         if( Vec3.dot( twistReset, rot ) < 0 ) twistReset.negate();
-        
+
         rot.pmul( twistReset );
     }
 
@@ -38,7 +37,7 @@ export default function lookSolver( tar: IKTarget, chain: IKChain, pose: Pose, D
     // Finalize
     rot.pmulInvert( tar.pworld.rot );   // Localspace
     pose.setLocalRot( lnk.index, rot ); // Save to pose
-        
+
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     if( Debug ){
         Debug.ln.add( tar.startPos, new Vec3().fromAdd( twistDir, tar.startPos ), 0x00ff00 );

@@ -7,7 +7,7 @@ import lookSolver       from '../solvers/lookSolver';
 import twoBoneSolver    from '../solvers/twoBoneSolver';
 // #endregion
 
-export default function limbSolver( target: IKTarget, chain: IKChain, pose: Pose ){
+export default function limbSolver( target: IKTarget, chain: IKChain, pose: Pose, debug: any ){
     // Resolve the target to the current pose data
     target.resolveTarget( chain, pose );
 
@@ -17,5 +17,5 @@ export default function limbSolver( target: IKTarget, chain: IKChain, pose: Pose
     // If the target is to far away, straighten the limb
     // Else bend the mid joint using the idea of triangles
     if( target.dist >= chain.len ) chain.resetPoseLocal( pose, 1 );
-    else                           twoBoneSolver( target, chain, pose );
+    else                           twoBoneSolver( target, chain, pose, debug );
 }

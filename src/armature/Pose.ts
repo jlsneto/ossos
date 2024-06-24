@@ -13,7 +13,7 @@ export default class Pose {
     linkedBone ?: Bone   = undefined;       // This skeleton extends another skeleton
     bones: Array< Bone > = new Array();     // Bone transformation heirarchy
 
-    constructor( arm ?: Armature ){ 
+    constructor( arm ?: Armature ){
         if( arm ) this.arm = arm;
 
         // If bindpose exists, then lets do an instant clone of it
@@ -28,17 +28,15 @@ export default class Pose {
     // #endregion
 
     // #region GETTERS
-    getBone( o: string | number ): Bone | null {
+    getBone( o: string | number ): Bone | null{
         switch( typeof o ){
-            case 'string':{
+            case 'string': {
                 const idx = this.arm.names.get( o );
                 return ( idx !== undefined )? this.bones[ idx ] : null;
-                break;
             }
 
             case 'number':
                 return this.bones[ o ];
-                break;
         }
         return null;
     }
@@ -54,7 +52,7 @@ export default class Pose {
         return rtn;
     }
 
-    clone(): Pose{ 
+    clone(): Pose{
         const p = new Pose();
         p.arm = this.arm;
         p.offset.copy( this.offset );
@@ -76,7 +74,7 @@ export default class Pose {
         if( bone ) bone.local.pos.copy( v );
         return this;
     }
-    
+
     setLocalRot( boneId: string | number, v: ConstQuat ): this{
         const bone = this.getBone( boneId );
         if( bone ) bone.local.rot.copy( v );
@@ -122,11 +120,11 @@ export default class Pose {
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         if( incParent ){
             b = this.bones[ pIdx ];
-            b.world.fromMul( 
+            b.world.fromMul(
                 ( b.pindex !== -1 )
                     ? this.bones[ b.pindex ].world  // Parent
                     : this.offset                   // No Parent
-                ,b.local
+                , b.local
             );
         }
 
@@ -147,10 +145,10 @@ export default class Pose {
     //     for( b of this.bones ){
     //         b.local.rot
     //             .copy( b.world.rot )
-    //             .pmulInvert( 
-    //                 ( b.pindex !== -1 )? 
-    //                     this.bones[ b.pindex ].world.rot : 
-    //                     this.offset.rot  
+    //             .pmulInvert( \
+    //                 ( b.pindex !== -1 )?
+    //                     this.bones[ b.pindex ].world.rot :
+    //                     this.offset.rot
     //             );
     //     }
 
@@ -216,10 +214,10 @@ export default class Pose {
         const bone = this.getBone( boneId );
         if( bone ){
             switch( axis ){
-                case 1  : bone.local.rot.rotY( deg * Math.PI / 180 ); break;
-                case 2  : bone.local.rot.rotZ( deg * Math.PI / 180 ); break;
-                default : bone.local.rot.rotX( deg * Math.PI / 180 ); break;
-            } 
+                case 1:  bone.local.rot.rotY( deg * Math.PI / 180 ); break;
+                case 2:  bone.local.rot.rotZ( deg * Math.PI / 180 ); break;
+                default: bone.local.rot.rotX( deg * Math.PI / 180 ); break;
+            }
         }else console.warn( 'Bone not found, ', boneId );
 
         return this;
@@ -227,11 +225,11 @@ export default class Pose {
 
     rotWorld( boneId: string | number, deg: number, axis = 'x' ): this{
         const bone = this.getBone( boneId );
-        
+
         if( bone ){
             const pWRot     = this.getWorldRotation( bone.pindex );                         // Get Parent World Space
             const cWRot     = new Quat( pWRot ).mul( bone.local.rot );                      // Get Bone's World Space
-            const ax: TVec3 = ( axis == 'y')? [0,1,0] : ( axis == 'z' )? [0,0,1] : [1,0,0]; // Rotation Axis
+            const ax: TVec3 = ( axis == 'y' )? [ 0, 1, 0 ] : ( axis == 'z' )? [ 0, 0, 1 ] : [ 1, 0, 0 ]; // Rotation Axis
 
             cWRot
                 .pmulAxisAngle( ax, deg * Math.PI / 180 )   // Apply rotation in world space
@@ -246,25 +244,25 @@ export default class Pose {
 
     moveLocal( boneId: string | number, offset:ConstVec3 ): this{
         const bone = this.getBone( boneId );
-        
+
         if( bone )  bone.local.pos.add( offset );
         else        console.warn( 'Pose.moveLocal - bone not found, ', boneId );
-        
+
         return this;
     }
 
     posLocal( boneId: string | number, pos:ConstVec3 ): this{
         const bone = this.getBone( boneId );
-        
+
         if( bone )  bone.local.pos.copy( pos );
         else        console.warn( 'Pose.posLocal - bone not found, ', boneId );
-        
+
         return this;
     }
 
     sclLocal( boneId: string | number, v: number | ConstVec3 ): this{
         const bone = this.getBone( boneId );
-        
+
         if( bone ){
             if( v instanceof Array || v instanceof Float32Array )
                 bone.local.scl.copy( v );

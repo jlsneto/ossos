@@ -5,10 +5,7 @@ import Vec3                     from '../maths/Vec3';
 import ISkin, { AnySkin }       from '../skinning/ISkin';
 // #endregion
 
-// type Nullable<T> = T | null | undefined;
-// type NonNull<T>  = Exclude< T, null | undefined >;
-
-export default class Armature{
+export default class Armature {
     // #region MAIN
     skin  ?: ISkin;
     names  : Map< string, number >   = new Map();
@@ -18,12 +15,12 @@ export default class Armature{
     // #endregion
 
     // #region GETTERS
-    get bindPose():Readonly< Pose >{ return this.poses.bind; }
+    get bindPose(): Readonly< Pose >{ return this.poses.bind; }
 
     get boneCount(): number{ return this.poses.bind.bones.length; }
-    
-    // TODO: Maybe a better way for quick qay to creates poses other then new Pose( Armature );
-    newPose( saveAs ?: string ): Pose {
+
+    // TODO: Maybe a better way for quick way to creates poses other then new Pose( Armature );
+    newPose( saveAs ?: string ): Pose{
         const p = this.poses.bind.clone();
         if( saveAs ) this.poses[ saveAs ] = p;
         return p;
@@ -31,12 +28,12 @@ export default class Armature{
     // #endregion
 
     // #region METHODS
-	addBone( obj ?: BoneProps | Bone ): Bone{
+    addBone( obj ?: BoneProps | Bone ): Bone{
         const bones = this.poses.bind.bones;
         const idx   = bones.length;
 
         if( obj instanceof Bone ){
-            
+
             obj.index = idx;
             bones.push( obj );
             this.names.set( obj.name, idx );
@@ -60,17 +57,15 @@ export default class Armature{
         }
     }
 
-    getBone( o: string | number ): Bone | null {
+    getBone( o: string | number ): Bone | null{
         switch( typeof o ){
-            case 'string':{
+            case 'string': {
                 const idx = this.names.get( o );
                 return ( idx !== undefined )? this.poses.bind.bones[ idx ] : null;
-                break;
             }
 
             case 'number':
                 return this.poses.bind.bones[ o ];
-                break;
         }
         return null;
     }
@@ -97,8 +92,8 @@ export default class Armature{
     // const skin = arm.useSkin( MatrixSkin );
     useSkin( skin: AnySkin ): AnySkin{
         switch( typeof skin ){
-            case 'object'   : this.skin = skin; break;
-            case 'function' : this.skin = new skin( this.poses.bind ); break;
+            case 'object':   this.skin = skin; break;
+            case 'function': this.skin = new skin( this.poses.bind ); break;
             default:
                 console.error( 'Armature.useSkin, unknown typeof of skin ref', skin );
                 break;
@@ -119,7 +114,7 @@ export default class Armature{
         for( let i=bEnd; i >= 0; i-- ){
             b = pose.bones[ i ];
 
-            if( b.pindex !== -1 ){ 
+            if( b.pindex !== -1 ){
                 p       = pose.bones[ b.pindex ];
                 p.len   = Vec3.dist( p.world.pos, b.world.pos );
                 if( p.len < 0.0001  ) p.len = 0;

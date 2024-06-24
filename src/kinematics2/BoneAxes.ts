@@ -3,9 +3,9 @@ import type { ConstQuat } from '../maths/Quat';
 import Vec3 from '../maths/Vec3';
 // #endregion
 
-export default class BoneAxes{
+export default class BoneAxes {
     // #region STATIC
-    // SWING-TWIST-ORTHO
+    // SWING-TWIST-ORTHO - What is Forward - Up - Left
     static UFR = 0;     // Aim, Chest, BLENDER LIKE
     static RBD = 1;     // Left Arm
     static LBD = 2;     // Right Arm
@@ -80,9 +80,9 @@ export default class BoneAxes{
                 break;
         }
 
-        this.swing.norm()
-        this.twist.norm()
-        this.ortho.norm()
+        this.swing.norm();
+        this.twist.norm();
+        this.ortho.norm();
         return this;
     }
     // #endregion

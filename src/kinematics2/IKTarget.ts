@@ -7,7 +7,7 @@ import Transform            from '../maths/Transform';
 // #endregion
 
 
-export default class IKTarget{
+export default class IKTarget {
     // #region MAIN
     hasChanged  = false;
     tMode       = 0;               // Initial Target : Position or Direction
@@ -56,7 +56,7 @@ export default class IKTarget{
     resolveTarget( chain: IKChain, pose: Pose ): this{
         // Get the World transform to the root's parent bone of the chain
         pose.getWorldTransform( chain.links[0].pindex, this.pworld );
-        
+
         // Then add bone's LS bind transform to get its current unmodified world transform
         this.rworld.fromMul( this.pworld, chain.links[ 0 ].bind );
 
@@ -73,7 +73,7 @@ export default class IKTarget{
                 break;
 
             // Direction
-            case 1: 
+            case 1:
                 console.log( 'tMode 1 not implemented' );
                 break;
         }

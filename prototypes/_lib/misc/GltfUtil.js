@@ -9,10 +9,10 @@ import MatrixSkinPbrMaterial    from '../customSkinning/MatrixSkinPbrMaterial.js
 
 export { Gltf2 };
 
-export default class GltfUtil{
+export default class GltfUtil {
 
     // #region ARMATURE
-    static parseArmature( gltf, mkOffsetPose=false ){
+    static parseArmature( gltf, mkOffsetPose=false, minBone=0.1 ){
         const skin  = gltf.getSkin();
         const arm   = new Armature();
 
@@ -23,8 +23,7 @@ export default class GltfUtil{
             if( j.position ) b.local.pos.copy( j.position );
             if( j.scale )    b.local.scl.copy( j.scale );
         }
-
-        arm.bind( 0.1 );
+        arm.bind( minBone );
 
         if( mkOffsetPose && ( skin.scale || skin.rotation ) ){
             const pose = arm.newPose( 'opose' );
@@ -76,10 +75,10 @@ export default class GltfUtil{
 
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             for( let p of m.primitives ){
-                
-                // Get Data 
+
+                // Get Data
                 geo     = this.geoPrimitive( p, useSkin );
-                
+
                 // What Material To use?
                 matId   = p.materialIdx || 'default';
                 mat     = matCache[ matId ];
@@ -180,7 +179,7 @@ export default class GltfUtil{
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         const anim  = gltf.getAnimation( name );
         const clip  = new Clip( anim.name );
-    
+
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         let i;
         for( i of anim.timestamps ){
@@ -188,26 +187,26 @@ export default class GltfUtil{
             if( i.elementCnt > clip.frameCount ) clip.frameCount = i.elementCnt;                     // Find max frame counts
             if( i?.boundMax[0] > clip.duration ) clip.duration   = i.boundMax[0];                    // Find full duration
         }
-    
+
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         let gTrack; // Gltf Track
         let oTrack; // Ossos Track
         let bName;  // Bone Name
         let reBoneFilter = new RegExp( /(root|hips?)/i ); // Only use Vec3 tracks for root or hip bone
-    
+
         for( gTrack of anim.tracks ){
             // -------------------------------------------
             if( !gTrack.keyframes.data ){
                 console.error( 'GLTF Animation Track has no keyframe data' );
                 continue;
             }
-    
+
             // -------------------------------------------
             oTrack = null;
             switch( gTrack.transform ){
                 // Rotation
                 case 0: oTrack = new TrackQuat( gTrack.interpolation ); break;
-    
+
                 // Translation
                 case 1:
                     bName = pose.bones[ gTrack.jointIndex ].name;
@@ -215,21 +214,21 @@ export default class GltfUtil{
                         oTrack = new TrackVec3( gTrack.interpolation ); break;
                     }
                     break;
-    
+
                 // Scale
                 case 2: break;
             }
-    
+
             // -------------------------------------------
             if( !oTrack ) continue;
-    
+
             oTrack.setData( gTrack.keyframes.data );
             oTrack.boneIndex = gTrack.jointIndex;
             oTrack.timeIndex = gTrack.timeStampIndex;
-    
+
             clip.tracks.push( oTrack );
         }
-    
+
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         return clip;
     }
