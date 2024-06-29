@@ -1,7 +1,7 @@
 import * as THREE   from '@three';
 import { Vec3 }     from '../../../src/index';
 
-export default class Util{
+export default class Util {
 
     static debugBones( ary, debug, flen=0.2, pntSize=1, doReset=false, boneColor=0x00ffff, jntColor=0x00ff00 ){
         const up   = new Vec3();

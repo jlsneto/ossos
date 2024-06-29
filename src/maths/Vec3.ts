@@ -3,7 +3,7 @@ import type { ConstQuat } from './Quat';
 export type TVec3     = [number,number,number] | Float32Array | Array<number> | number[];
 export type ConstVec3 = Readonly< TVec3 >;
 
-export default class Vec3 extends Array< number >{
+export default class Vec3 extends Array< number > {
     // #region STATIC PROPERTIES
     static UP       = [  0,  1,  0 ];
     static DOWN     = [  0, -1,  0 ];
@@ -13,7 +13,7 @@ export default class Vec3 extends Array< number >{
     static BACK     = [  0,  0, -1 ];
     // #endregion
 
-    // #region MAIN 
+    // #region MAIN
     constructor()
     constructor( v: TVec3 | ConstVec3 )
     constructor( v: number )
@@ -173,12 +173,12 @@ export default class Vec3 extends Array< number >{
         return this;
     }
 
-    fromSlerp( a: TVec3, b: TVec3, t: number ): this {
+    fromSlerp( a: TVec3, b: TVec3, t: number ): this{
         const angle  = Math.acos( Math.min( Math.max( Vec3.dot( a, b ), -1 ), 1 ) );
         const sin    = Math.sin( angle);
         const ta     = Math.sin(( 1 - t ) * angle ) / sin;
         const tb     = Math.sin( t * angle ) / sin;
-        
+
         this[ 0 ] = ta * a[ 0 ] + tb * b[ 0 ];
         this[ 1 ] = ta * a[ 1 ] + tb * b[ 1 ];
         this[ 2 ] = ta * a[ 2 ] + tb * b[ 2 ];
@@ -419,7 +419,7 @@ export default class Vec3 extends Array< number >{
     static dist( a: ConstVec3, b: ConstVec3 ): number{ return Math.sqrt( (a[ 0 ]-b[ 0 ]) ** 2 + (a[ 1 ]-b[ 1 ]) ** 2 + (a[ 2 ]-b[ 2 ]) ** 2 ); }
     static distSqr( a: ConstVec3, b: ConstVec3 ): number{ return (a[ 0 ]-b[ 0 ]) ** 2 + (a[ 1 ]-b[ 1 ]) ** 2 + (a[ 2 ]-b[ 2 ]) ** 2; }
 
-    static dot( a: ConstVec3, b: ConstVec3 ): number { return a[ 0 ] * b[ 0 ] + a[ 1 ] * b[ 1 ] + a[ 2 ] * b[ 2 ]; }
+    static dot( a: ConstVec3, b: ConstVec3 ): number{ return a[ 0 ] * b[ 0 ] + a[ 1 ] * b[ 1 ] + a[ 2 ] * b[ 2 ]; }
     static cross( a: ConstVec3, b: ConstVec3, out: TVec3 = new Vec3() ): TVec3{
         const ax = a[0], ay = a[1], az = a[2],
               bx = b[0], by = b[1], bz = b[2];
@@ -444,10 +444,10 @@ export default class Vec3 extends Array< number >{
         // const theta = this.dot( a, b ) / ( Math.sqrt( Vec3.lenSqr(a) * Vec3.lenSqr(b) ) );
         // return Math.acos( Math.max( -1, Math.min( 1, theta ) ) ); // clamp ( t, -1, 1 )
 
-        // atan2(len(cross(a,b)),dot(a,b))  
+        // atan2(len(cross(a,b)),dot(a,b))
         const d = this.dot( a, b ),
               c = new Vec3().fromCross( a, b );
-        return Math.atan2( Vec3.len(c), d ); 
+        return Math.atan2( Vec3.len(c), d );
 
         // This also works, but requires more LEN / SQRT Calls
         // 2 * atan2( ( u * v.len - v * u.len ).len, ( u * v.len + v * u.len ).len );

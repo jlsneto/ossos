@@ -53,7 +53,7 @@ window.addEventListener( 'load', async _=>{
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Setup Rig
-    const rig = new IKRig( arm.bindPose ); // TPose Required !!!
+    const rig = new IKRig( arm.bindPose ); // Must be a TPose !!!
     rig.addSet( { 
         name    : 'arm.l', 
         solver  : 'limb', 

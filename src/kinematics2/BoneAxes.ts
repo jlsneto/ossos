@@ -8,8 +8,8 @@ export default class BoneAxes {
     // SWING-TWIST-ORTHO - What is Forward - Up - Left
     static UFR = 0;     // Aim, Chest, BLENDER LIKE
     static RBD = 1;     // Left Arm
-    static LBD = 2;     // Right Arm
-    static DFL = 3;     // Legs
+    static LBU = 2;     // Right Arm
+    static DFR = 3;     // Legs
     static FUR = 4;     // Standard WorldSpace Dir
     // #endregion
 
@@ -61,16 +61,16 @@ export default class BoneAxes {
                 this.ortho.fromQuat( q, Vec3.DOWN );
                 break;
 
-            case BoneAxes.LBD:
-                this.swing.fromQuat( q, Vec3.RIGHT );
+            case BoneAxes.LBU:
+                this.swing.fromQuat( q, Vec3.LEFT );
                 this.twist.fromQuat( q, Vec3.BACK );
-                this.ortho.fromQuat( q, Vec3.DOWN );
+                this.ortho.fromQuat( q, Vec3.UP );
                 break;
 
-            case BoneAxes.DFL:
+            case BoneAxes.DFR:
                 this.swing.fromQuat( q, Vec3.DOWN );
                 this.twist.fromQuat( q, Vec3.FORWARD );
-                this.ortho.fromQuat( q, Vec3.LEFT );
+                this.ortho.fromQuat( q, Vec3.RIGHT );
                 break;
 
             case BoneAxes.FUR:

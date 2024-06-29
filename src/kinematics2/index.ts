@@ -2,7 +2,7 @@
 import BoneAxes             from './BoneAxes';
 import IKTarget             from './IKTarget';
 import { IKChain, IKLink }  from './IKChain';
-
+import { IKRig }            from './IKRig';
 // #endregion
 
 // #region SOLVERS
@@ -13,7 +13,7 @@ import limbSolver       from './compose/limbSolver';
 // #endregion
 
 export {
-    BoneAxes, IKTarget, IKChain, IKLink,
+    IKRig, IKTarget, IKChain, IKLink, BoneAxes,
     lookSolver, twoBoneSolver,
     limbSolver,
 };

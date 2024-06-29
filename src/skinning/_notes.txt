@@ -3,15 +3,22 @@ DIFFERENT WAY TO HANDLE MATRIX SKINNING
 For funky way to handle skeleton that are scaled up & rotated in relation to the mesh
 So skeleton & mesh does not match up, so you need a bind + inverseBind & you need to build up
 
+// Vertex Skinning Shader
 https://github.com/mrdoob/three.js/blob/f2766a0dfc47a790cd64dec6f9b7132d6fee9fa8/src/renderers/shaders/ShaderChunk/skinning_vertex.glsl.js#L12
 
+// Getting Bone Matrices from Data Texture
 https://github.com/mrdoob/three.js/blob/f2766a0dfc47a790cd64dec6f9b7132d6fee9fa8/src/renderers/shaders/ShaderChunk/skinbase_vertex.glsl.js#L4
-
 https://github.com/mrdoob/three.js/blob/f2766a0dfc47a790cd64dec6f9b7132d6fee9fa8/src/renderers/shaders/ShaderChunk/skinning_pars_vertex.glsl.js#L9
 
+// Where vec3 transformed gets started
 https://github.com/mrdoob/three.js/blob/f2766a0dfc47a790cd64dec6f9b7132d6fee9fa8/src/renderers/shaders/ShaderChunk/begin_vertex.glsl.js#L4
 
+// BindPose Generated
 https://github.com/mrdoob/three.js/blob/f2766a0dfc47a790cd64dec6f9b7132d6fee9fa8/src/objects/SkinnedMesh.js#L150
+https://github.com/mrdoob/three.js/blob/dev/src/objects/Skeleton.js#L64
+
+// Apply Bone Transform
+https://github.com/mrdoob/three.js/blob/3f53946c9a2ef1795bf95900af3a8e71710a5aa6/src/objects/SkinnedMesh.js#L223
 
 https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/Michelle.glb
 

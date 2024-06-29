@@ -1,0 +1,27 @@
+3D Line Fitting even shows how to do PLANE FITTING EXAMPLE
+https://zalo.github.io/blog/line-fitting/
+
+
+GOOD EXAMPLE OF CCD WITH CONSTRAINTS
+https://zalo.github.io/blog/inverse-kinematics/
+https://zalo.github.io/blog/constraints/
+
+REALLY GOOD ORTHO NORMALZING AN AXIS
+This spreads the error across three directions to compute the average axes
+This might be very useful in situations with IK
+https://zalo.github.io/blog/polar-decomposition/
+
+
+Wierd Interactions between points
+https://zalo.github.io/blog/ellipsoids/
+
+
+Recompute the position & rotation of various points
+in relation to its change from its original. Great for
+Rigid body stuff. Plus it has a nice particle sim of holding
+its shape while still dropping to the floor.
+https://zalo.github.io/blog/kabsch/
+
+
+Great examples of segments, even a setup to control a plane
+https://zalo.github.io/blog/closest-point-between-segments/

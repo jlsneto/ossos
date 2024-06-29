@@ -34,6 +34,43 @@ export default class GltfUtil {
 
         return arm;
     }
+
+    /* V2 - Cincludes offset as part of the bindpose
+    This becomes true in a sense if there is a
+    transform applied to the armature itself in blender
+    function getArmature( gltf, minLen=0.1 ){
+        const skin  = gltf.getSkin();
+        const arm   = new Armature();
+        let hasOffset = false;
+
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // Create Armature Skeleton
+        let b;
+        for( const j of skin.joints ){
+            b = arm.addBone( { name: j.name, parent: j.parentIndex } );
+            if( j.rotation ) b.local.rot.copy( j.rotation );
+            if( j.position ) b.local.pos.copy( j.position );
+            if( j.scale )    b.local.scl.copy( j.scale );
+        }
+
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // Set offset before binding, GLTF's inverseMatrices will
+        // include this in the bindpose which I think shouldnt
+        if( skin.position || skin.scale || skin.rotation  ){
+            const pose = arm.bindPose;
+            if( skin.position ) pose.offset.pos.copy( skin.position );
+            if( skin.rotation ) pose.offset.rot.copy( skin.rotation );
+            if( skin.scale  )   pose.offset.scl.copy( skin.scale  );
+        }
+
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // Finalize bone & instialize one of the skinning algorithms
+        arm.bind( minLen );
+        arm.useSkin( MatrixSkin );
+
+        return arm;
+    }
+    */
     // #endregion
 
     // #region METHODS

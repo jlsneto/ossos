@@ -45,6 +45,7 @@ export class IKChain {
 
     // #region GETTERS // SETTERS
     get lastLink(){ return this.links[ this.links.length-1 ]; }
+    get firstLink(){ return this.links[0]; }
 
     setBones( bones: Array< Bone >, swingTwist: number = -1 ): this{
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -96,6 +97,7 @@ export class IKChain {
             debug.pnt.add( t.pos, 0xffffff, 1, 0 );
             debug.ln.add( t.pos, v.fromScaleThenAdd( 0.1, a.swing, t.pos ), 0xffffff );
             debug.ln.add( t.pos, v.fromScaleThenAdd( 0.1, a.twist, t.pos ), 0xff00ff );
+            debug.ln.add( t.pos, v.fromScaleThenAdd( 0.1, a.ortho, t.pos ), 0x707070 );
         }
     }
 

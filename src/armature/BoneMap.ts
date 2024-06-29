@@ -4,8 +4,8 @@ import Bone     from './Bone';
 import Pose     from './Pose';
 // #endregion
 
-export default class BoneMap{
-    bones : Map< string, BoneInfo  > = new Map();
+export default class BoneMap {
+    bones : Map<string, BoneInfo> = new Map();
     obj  !: Armature | Pose;
 
     constructor( obj ?: Armature | Pose ){
@@ -33,7 +33,7 @@ export default class BoneMap{
                 if( !bi ) this.bones.set( key, new BoneInfo( b ) );
 
                 // If found & is a chain, push extra bones
-                else if( bi && bp.isChain ) bi.push( b );   
+                else if( bi && bp.isChain ) bi.push( b );
 
                 break;
             }
@@ -61,11 +61,28 @@ export default class BoneMap{
                 console.warn( 'Bonemap.getBones - Bone not found', name );
             }
         }
-        
+
         return ( rtn.length >= aryNames.length )? rtn : null;
     }
 
-    getChestBone(): Array<Bone> | null {
+    getBoneNames( ary: Array<string> ): Array<string> | null{
+        const rtn : Array<string> = [];
+        let bi    : BoneInfo | undefined;
+        let i     : BoneInfoItem;
+
+        for( const name of ary ){
+            if( ( bi = this.bones.get( name ) ) ){
+                for( i of bi.items ) rtn.push( i.name );
+            }else{
+                console.warn( 'Bonemap.getBoneNames - Bone not found', name );
+                return null;
+            }
+        }
+
+        return rtn;
+    }
+
+    getChestBone(): Array<Bone> | null{
         const bAry = ( this.obj instanceof Armature )? this.obj.bindPose.bones : this.obj.bones;
         const rtn : Array<Bone> = [];
 
@@ -80,11 +97,11 @@ export default class BoneMap{
 
 // #region DATA STRUCTURES
 type BoneInfoItem = {
-    index   : number,
-    name    : string,
+    index : number,
+    name  : string,
 };
 
-export class BoneInfo{
+export class BoneInfo {
     items: Array< BoneInfoItem > = [];
 
     constructor( b ?: Bone ){
@@ -104,7 +121,8 @@ export class BoneInfo{
 // #endregion
 
 // #region NAME PARSING
-class BoneParse{
+
+class BoneParse {
     name        : string;
     isLR        : boolean;
     isChain     : boolean;

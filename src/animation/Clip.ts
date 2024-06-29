@@ -9,7 +9,7 @@ import TrackQuat                from './TrackQuat';
 import TrackVec3 from './TrackVec3';
 // #endregion
 
-export default class Clip{
+export default class Clip {
     // #region MAIN
     name        : string                     = '';          // Clip Name
     frameCount  : number                     = 0;           // Total frames in animation
@@ -44,7 +44,7 @@ export default class Clip{
         }
 
         this.rootMotion = rm;
-        return this
+        return this;
     }
     // #endregion
 
@@ -56,7 +56,7 @@ export default class Clip{
             for( const ts of this.timeStamps ){
                 if( ts.length === this.frameCount ) return ts[ f ];
             }
-        }  
+        }
 
         return -1;
     }
@@ -69,7 +69,7 @@ export default class Clip{
         const lerpKeys      = Object.keys( LerpType );
 
         // @ts-ignore
-        const getLerpName   = ( v: number ): any => lerpKeys.find( k=>LerpType[k] === v );
+        const getLerpName   = ( v: number ): any=>lerpKeys.find( k=>LerpType[k] === v );
 
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         let bName     = '';
@@ -88,7 +88,7 @@ export default class Clip{
             else                                trackType = 'Unknown';
 
             // console.log( bName, trackType, this.timeStamps[ t.timeIndex ].length, getLerpName( t.lerpType ), t );
-            
+
             console.log( 'Bone [ %s ] \t Type [ %s ] \t Lerp Type [ %s ] \t Frames [ %d ]'
                 , bName
                 , trackType

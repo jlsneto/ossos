@@ -7,7 +7,7 @@ import { TVec3 } from '../maths/Vec3';
 
 export type TOnEventHandler = ( evt:string )=>void;
 
-export default class PoseAnimator{
+export default class PoseAnimator {
     // #region MAIN
     isRunning                           = false;
     clip       ?: Clip                  = undefined;    // Animation Clip
@@ -16,9 +16,9 @@ export default class PoseAnimator{
     scale       : number                = 1;            // Scale the speed of the animation
     onEvent    ?: TOnEventHandler       = undefined;    //
     eventCache ?: Map<string, boolean>  = undefined;
-    placementMask   : TVec3             = [0,1,0];      // Used when inPlace is turned on. Set what to reset.
+    placementMask   : TVec3             = [ 0, 1, 0 ];  // Used when inPlace is turned on. Set what to reset.
     // #endregion
-    
+
     // #region SETTERS
     setClip( clip: Clip ): this{
         this.clip           = clip;
@@ -34,7 +34,7 @@ export default class PoseAnimator{
         if( clip.events && !this.eventCache ){
             this.eventCache = new Map();
         }
-        
+
         // Compute the times for the first frame
         this.computeFrameInfo();
         return this;
@@ -74,7 +74,7 @@ export default class PoseAnimator{
     atTime( t: number ): this{
         if( this.clip ){
             this.clock = t % this.clip.duration; //Math.max( 0, Math.min( this.clip.duration, t ) );
-            this.computeFrameInfo();            
+            this.computeFrameInfo();
         }
         return this;
     }
@@ -110,7 +110,7 @@ export default class PoseAnimator{
     start(): this{ this.isRunning=true; return this; }
     stop(): this{ this.isRunning=false; return this; }
 
-    usePlacementReset( mask: TVec3 = [0,1,0] ): this{ this.placementMask = mask; return this; }
+    usePlacementReset( mask: TVec3 = [ 0, 1, 0 ] ): this{ this.placementMask = mask; return this; }
 
     updatePose( pose: Pose ): this{
         if( this.clip ){
@@ -125,6 +125,7 @@ export default class PoseAnimator{
             pose.bones[ 0 ].local.pos.mul( this.placementMask );
         }
 
+        pose.updateWorld();
         return this;
     }
 
@@ -159,7 +160,7 @@ export default class PoseAnimator{
                 fi.singleFrame();
                 continue;
             }
-            
+
             ts = this.clip.timeStamps[ i ];
 
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -220,7 +221,7 @@ export default class PoseAnimator{
     // #endregion
 }
 
-export class FrameInfo{
+export class FrameInfo {
     t   : number =  0; // Lerp Time
     kA  : number = -1; // Keyframe Pre Tangent
     kB  : number = -1; // Keyframe Lerp Start
