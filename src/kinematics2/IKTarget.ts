@@ -19,6 +19,9 @@ export default class IKTarget {
     swing       = new Vec3();      // To Target Direction or end-start position
     twist       = new Vec3();      // To Pole Direction or Orth direction of swing
 
+    altSwing   !: Vec3;           // Second set of SwingTwist Directions
+    altTwist   !: Vec3;           // ... used just for SwingTwistEnds Solver
+
     pworld      = new Transform(); // Parent Bone WS Transform
     rworld      = new Transform(); // Root Bone WS Transform
     // #endregion
@@ -41,6 +44,19 @@ export default class IKTarget {
         this.swing.copy( s );
 
         if( t ) this.twist.copy( t );
+        return this;
+    }
+
+    setAltDirections( s: ConstVec3, t: ConstVec3 ): this{
+        this.hasChanged = true;
+
+        if( !this.altSwing ){
+            this.altSwing = new Vec3();
+            this.altTwist = new Vec3();
+        }
+
+        this.altSwing.copy( s );
+        this.altTwist.copy( t );
         return this;
     }
 

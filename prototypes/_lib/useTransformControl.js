@@ -21,12 +21,12 @@ export default function useTransformControl( tjs ){
             if( self.axes ) self.axes.visible = false;
         },
 
-        toTranslate : ()=>gizmo.setMode( 'translate' ),
-        toRotate    : ()=>gizmo.setMode( 'rotate' ),
+        toTranslate : ()=>{ gizmo.setMode( 'translate' ); return self; },
+        toRotate    : ()=>{gizmo.setMode( 'rotate' ); return self; },
 
         setPos      : p=>{
             if( gizmo.object ) gizmo.object.position.fromArray( p );
-            return this;
+            return self;
         },
 
         useAxes     : ( s=0.5 )=>{
@@ -51,8 +51,8 @@ export default function useTransformControl( tjs ){
 
     const onChange = ()=>{
         const o = gizmo.object;
-        if(! (o && gizmo.dragging) ) return;
-        
+        if( !( o && gizmo.dragging ) ) return;
+
         switch( gizmo.mode ){
             case 'translate':
                 if( self.onMove )   self.onMove( o.position.toArray() );

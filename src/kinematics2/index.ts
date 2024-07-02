@@ -8,12 +8,13 @@ import { IKRig }            from './IKRig';
 // #region SOLVERS
 import lookSolver       from './solvers/lookSolver';
 import twoBoneSolver    from './solvers/twoBoneSolver';
+import swingTwistChainSolver from './solvers/swingTwistChainSolver';
 
 import limbSolver       from './compose/limbSolver';
 // #endregion
 
 export {
     IKRig, IKTarget, IKChain, IKLink, BoneAxes,
-    lookSolver, twoBoneSolver,
+    lookSolver, twoBoneSolver, swingTwistChainSolver,
     limbSolver,
 };
