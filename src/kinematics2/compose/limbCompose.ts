@@ -7,7 +7,7 @@ import lookSolver       from '../solvers/lookSolver';
 import twoBoneSolver    from '../solvers/twoBoneSolver';
 // #endregion
 
-export default function limbSolver( target: IKTarget, chain: IKChain, pose: Pose, debug: any ){
+export default function limbCompose( target: IKTarget, chain: IKChain, pose: Pose, debug: any ){
     // Resolve the target to the current pose data
     target.resolveTarget( chain, pose );
 

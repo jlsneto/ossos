@@ -5,7 +5,7 @@ import type { IKChain }     from './IKChain';
 
 import lookSolver           from './solvers/lookSolver';
 import twoBoneSolver        from './solvers/twoBoneSolver';
-import limbSolver           from './compose/limbSolver';
+import limbCompose          from './compose/limbCompose';
 // #endregion
 
 // #region TYPES
@@ -19,7 +19,7 @@ export type TIKSolver = ( tar: IKTarget, chain: IKChain, pose: Pose, Debug ?: an
 export const IK_SOLVERS : Record<string, TIKSolver>  = {
     'look'      : lookSolver,
     'twoBone'   : twoBoneSolver,
-    'limb'      : limbSolver,
+    'limb'      : limbCompose,
 };
 
 // #endregion

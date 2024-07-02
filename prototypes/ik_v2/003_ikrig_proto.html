@@ -14,8 +14,7 @@ import {
 } from '../../src/index';
 
 import {
-    BoneAxes, IKTarget, IKChain, 
-    lookSolver, twoBoneSolver, limbSolver,
+    BoneAxes, IKTarget, IKChain, lookSolver, limbCompose,
 } from '../../src/kinematics2/index';
 // #endregion
 
@@ -109,8 +108,8 @@ function onPreRender( dt, et ){}
 
 const IK_SOLVERS = {
     'look'      : lookSolver,
-    'twoBone'   : twoBoneSolver,
-    'limb'      : limbSolver,
+    // 'twoBone'   : twoBoneSolver,
+    'limb'      : limbCompose,
 };
 
 class IKSet{

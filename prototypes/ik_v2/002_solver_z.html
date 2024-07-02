@@ -3,17 +3,17 @@
 <body><script type="module">
 // #region IMPORTS
 import useThreeWebGL2, { THREE, useDarkScene, useVisualDebug } from '../_lib/useThreeWebGL2.js';
-import useTransformControl     from '../_lib/useTransformControl.js';
-import Util                    from '../_lib/misc/Util.js';
+import useTransformMultiControl from '../_lib/useTransformMultiControl.js';
+import Util                     from '../_lib/misc/Util.js';
 
-import facedCube               from '../_lib/meshes/facedCube.js';
+import facedCube                from '../_lib/meshes/facedCube.js';
 
 import { 
     Armature, Quat, Vec3, Transform,
 } from '../../src/index';
 
 import {
-    BoneAxes, IKTarget, IKChain, swingTwistChainSolver,
+    BoneAxes, IKTarget, IKChain, zCompose
 } from '../../src/kinematics2/index';
 // #endregion
 
@@ -21,35 +21,26 @@ import {
 let Debug;
 let App = useDarkScene( useThreeWebGL2() );
 let Ref = {
-    bCnt        : 5,
+    gizmo       : useTransformMultiControl( App, 2 ).useAxes(),
+    tarPos      : [0,0.7,1],
+    polPos      : [0,0.7,-1],
+    bCnt        : 4,
+    bStep       : 0.7,
     cubes       : [],
-    gizmo       : useTransformControl( App ).toRotate(),
-    selected    : -1,
-    targets     : [
-        new THREE.AxesHelper(),
-        new THREE.AxesHelper(),
-    ],
 };
 
 window.addEventListener( 'load', async _=>{
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Setup
-    App.sphericalLook( 0, 20, 5, [ 0, 0.6, 0 ] );
+    App.sphericalLook( 45, 20, 5, [ 0, 0.6, 0 ] );
     Debug = await useVisualDebug( App );
 
-    Ref.targets.forEach( (o,i)=>{
-        o.scale.setScalar( 0.3 );
-        o.position.x = -2;
-        o.position.y = 1 * i + 0.1;
-        App.scene.add( o );
-    });
-
-    Ref.gizmo.attach( Ref.targets[0] );
-    Ref.selected = 0;
+    Ref.gizmo.setPos( 0, Ref.tarPos );
+    Ref.gizmo.setPos( 1, Ref.polPos );
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Build Skeleton
-    const arm = createTestChain( Ref.bCnt, 0.3 );
+    const arm = createTestChain( Ref.bCnt, Ref.bStep );
     Util.debugBones( arm.poses.bind.bones, Debug, 0.2, 1, false );
 
     Ref.arm     = arm;
@@ -60,24 +51,24 @@ window.addEventListener( 'load', async _=>{
     Ref.ikt     = new IKTarget();
 
     poseCubes( Ref.pose );
-    runSolver();
+    // runSolver();
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     //App.createRenderLoop( onPreRender ).start();
     App.renderLoop();
 });
 
-// Ref.gizmo.onMove = (p)=>{};
-Ref.gizmo.onRotate = (q)=>{ runSolver(); };
-function onPreRender( dt, et ){}
-
-window.addEventListener( 'keydown', e=>{
-    switch( e.key ){
-        case "1": Ref.gizmo.attach( Ref.targets[0] ); Ref.selected = 0; break;
-        case "2": Ref.gizmo.attach( Ref.targets[1] ); Ref.selected = 1; break;
-        case "3": Ref.gizmo.detach(); Ref.selected = -1; break;
+// Ref.gizmo.onRotate = (q)=>{ runSolver(); };
+Ref.gizmo.onMove = (i, p)=>{
+    switch( i ){
+        case 0: Ref.tarPos = p; break;
+        case 1: Ref.polPos = p; break;
     }
-})
+
+    runSolver();
+};
+
+function onPreRender( dt, et ){}
 // #endregion
 
 // #region SETUP
@@ -87,7 +78,8 @@ function createTestChain( cnt=3, step=0.5 ){
 
     for( let i=0; i < cnt; i++ ) prev = arm.addBone( { name:`b${i}`, pos:[0,step,0], parent:prev } );
 
-    arm.bind( step );
+    // arm.bind( step );
+    arm.bind( 0.001 );
     return arm;
 }
 
@@ -96,7 +88,7 @@ function createBoxChain( cnt=3 ){
 
     for( let i=0; i < cnt; i++ ){
         const c = facedCube();
-        c.scale.setScalar( 0.2 );
+        c.scale.setScalar( 0.1 );
         rtn.push( c );
         App.scene.add( c );
     }
@@ -104,7 +96,7 @@ function createBoxChain( cnt=3 ){
     return rtn;
 }
 
-function poseCubes( pose, offset=[2,0,0] ){
+function poseCubes( pose, offset=[0,0,0] ){
     for( const b of Ref.pose.bones ){
         const c = Ref.cubes[ b.index ];
         c.quaternion.fromArray( b.world.rot );
@@ -121,32 +113,16 @@ function runSolver(){
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Setup IK Target
-    const q      = new Quat();
-    const swing0 = new Vec3();
-    const twist0 = new Vec3();
-    const swing1 = new Vec3();
-    const twist1 = new Vec3();
-
-    q.copy( Ref.targets[0].quaternion.toArray() );
-    swing0.fromQuat( q, Vec3.UP );
-    twist0.fromQuat( q, Vec3.FORWARD );
-
-    q.copy( Ref.targets[1].quaternion.toArray() );
-    swing1.fromQuat( q, Vec3.UP );
-    twist1.fromQuat( q, Vec3.FORWARD );
-
-    Ref.ikt
-        .setDirections( swing0, twist0 )
-        .setAltDirections( swing1, twist1 );
+    Ref.ikt.setPositions( Ref.tarPos, Ref.polPos );
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Run Solver
-    swingTwistChainSolver( Ref.ikt, Ref.chain, Ref.pose, Debug );
+    zCompose( Ref.ikt, Ref.chain, Ref.pose, Debug );
     Ref.pose.updateWorld();
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Visualize Results
-    Util.debugBones( Ref.pose.bones, Debug, 0.2, 1, false );1
+    Util.debugBones( Ref.pose.bones, Debug, 0.2, 1, false );
     poseCubes( Ref.pose );
 }
 // #region 

@@ -6,15 +6,16 @@ import { IKRig }            from './IKRig';
 // #endregion
 
 // #region SOLVERS
-import lookSolver       from './solvers/lookSolver';
-import twoBoneSolver    from './solvers/twoBoneSolver';
+import lookSolver           from './solvers/lookSolver';
+import twoBoneSolver        from './solvers/twoBoneSolver';
 import swingTwistChainSolver from './solvers/swingTwistChainSolver';
 
-import limbSolver       from './compose/limbSolver';
+import limbCompose          from './compose/limbCompose';
+import zCompose             from './compose/zCompose';
 // #endregion
 
 export {
     IKRig, IKTarget, IKChain, IKLink, BoneAxes,
     lookSolver, twoBoneSolver, swingTwistChainSolver,
-    limbSolver,
+    limbCompose, zCompose,
 };

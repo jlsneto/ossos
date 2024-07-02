@@ -13,8 +13,7 @@ import {
 } from '../../src/index';
 
 import {
-    BoneAxes, IKTarget, IKChain, 
-    lookSolver, twoBoneSolver, limbSolver,
+    BoneAxes, IKTarget, IKChain, limbCompose,
 } from '../../src/kinematics2/index';
 // #endregion
 
@@ -57,8 +56,8 @@ window.addEventListener( 'load', async _=>{
 
     target.debug( Debug );
 
-    lookSolver( target, chain, pose, Debug );
-    twoBoneSolver( target, chain, pose, Debug );
+    // lookCompose target, chain, pose, Debug );
+    // twoBoneSolver( target, chain, pose, Debug );
 
     pose.updateWorld();
     Util.debugBones( pose.bones, Debug, 0.2, 1, false );
@@ -100,10 +99,9 @@ Ref.gizmo.onMove = (i, p)=>{
 
     // ----------------------
     Ref.target.setPositions( Ref.tarPos, Ref.polPos );
-    limbSolver( Ref.target, Ref.chain, Ref.pose );
-
+    limbCompose( Ref.target, Ref.chain, Ref.pose );
     // Ref.target.debug( Debug );
-    
+
     // ----------------------
     Ref.pose.updateWorld();
     Ref.sockets.updateFromPose( Ref.pose );
