@@ -7,7 +7,7 @@ import Transform            from '../maths/Transform';
 import Mat4                 from '../maths/Mat4';
 // #endregion
 
-export default class TranMatrixSkin implements ISkin{
+export default class TranMatrixSkin implements ISkin {
     // #region MAIN
     bind            !: Array< Transform >;      // Bind pose 
     world           !: Array< Transform >;      // World space computation
@@ -18,7 +18,7 @@ export default class TranMatrixSkin implements ISkin{
         const mat4Identity                  = new Mat4();           // used to fill in buffer with default data
         const world : Array< Transform >    = new Array( bCnt );    // World space matrices
         const bind  : Array< Transform >    = new Array( bCnt );    // bind pose matrices
-        
+
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         // Create Flat Buffer Space
         this.offsetBuffer  = new Float32Array( 16 * bCnt );
@@ -27,10 +27,10 @@ export default class TranMatrixSkin implements ISkin{
         for( let i=0; i < bCnt; i++ ){
             world[ i ] = new Transform();
             bind[ i ]  = new Transform();
-            
+
             mat4Identity.toBuf( this.offsetBuffer, i * 16 );  // Fill in Offset with Unmodified matrices
         }
-        
+
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         let b: Bone;
         for( let i=0; i < bCnt; i++ ){

@@ -10,20 +10,25 @@ import Transform            from '../maths/Transform';
 export default class IKTarget {
     // #region MAIN
     hasChanged  = false;
-    tMode       = 0;               // Initial Target : Position or Direction
-    pMode       = 0;               // Initial Pole   : Position or Direction
-    dist        = 0;
-    endPos      = new Vec3();      // Target Position
-    startPos    = new Vec3();      // Origin Position
-    polePos     = new Vec3();      // Position of Pole
-    swing       = new Vec3();      // To Target Direction or end-start position
-    twist       = new Vec3();      // To Pole Direction or Orth direction of swing
+    tMode       = 0;                // Initial Target : Position or Direction
+    pMode       = 0;                // Initial Pole   : Position or Direction
 
-    altSwing   !: Vec3;           // Second set of SwingTwist Directions
-    altTwist   !: Vec3;           // ... used just for SwingTwistEnds Solver
+    deltaMove   = new Vec3();       // How much to move a bone
 
-    pworld      = new Transform(); // Parent Bone WS Transform
-    rworld      = new Transform(); // Root Bone WS Transform
+    endPos      = new Vec3();       // Target Position
+    startPos    = new Vec3();       // Origin Position
+    polePos     = new Vec3();       // Position of Pole
+    dist        = 0;                // Distance from Origin & Target Position
+
+    swing       = new Vec3();       // To Target Direction or end-start position
+    twist       = new Vec3();       // To Pole Direction or Orth direction of swing
+    lenScale    = -1;               // How to scale the swing direction when computing IK Target Position
+
+    altSwing   !: Vec3;             // Second set of SwingTwist Directions
+    altTwist   !: Vec3;             // ... used just for SwingTwistEnds Solver
+
+    pworld      = new Transform();  // Parent Bone WS Transform
+    rworld      = new Transform();  // Root Bone WS Transform
     // #endregion
 
     // #region SETTERS
@@ -37,13 +42,17 @@ export default class IKTarget {
         return this;
     }
 
-    setDirections( s: ConstVec3, t ?: ConstVec3 ): this{
+    setDirections( s: ConstVec3, t ?: ConstVec3, scl ?: number ): this{
         this.hasChanged = true;
-        this.tMode      = 1;
-        this.pMode      = 0;
         this.swing.copy( s );
+        this.tMode      = 1;
 
-        if( t ) this.twist.copy( t );
+        if( t ){
+            this.twist.copy( t );
+            this.pMode = 1;
+        } else this.pMode = 0;
+
+        if( scl ) this.lenScale = scl;
         return this;
     }
 
@@ -64,6 +73,12 @@ export default class IKTarget {
         this.hasChanged = true;
         this.pMode      = 1;
         this.twist.copy( p );
+        return this;
+    }
+
+    setDeltaMove( p: ConstVec3, scl:number = 1 ): this{
+        this.deltaMove.copy( p ).scale( scl );
+        this.hasChanged = true;
         return this;
     }
     // #endregion
@@ -90,7 +105,14 @@ export default class IKTarget {
 
             // Direction
             case 1:
-                console.log( 'tMode 1 not implemented' );
+                // Do we scale the chain len?
+                this.dist = ( this.lenScale >= 0 )? this.lenScale * chain.len : chain.len;
+
+                this.startPos.copy( this.rworld.pos );
+                this.endPos
+                    .copy( this.swing )
+                    .scale( this.dist )
+                    .add( this.rworld.pos );
                 break;
         }
 
@@ -102,12 +124,13 @@ export default class IKTarget {
             case 0: this.twist
                 .fromSub( this.polePos, this.startPos )
                 .alignTwist( this.swing, this.twist )
-                .norm(); break;
+                .norm();
+                break;
 
             // Direction
-            case 1: this.twist
-                .alignTwist( this.swing, this.twist )
-                .norm(); break;
+            // case 1: this.twist
+            //     .alignTwist( this.swing, this.twist )
+            //     .norm(); break;
         }
 
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

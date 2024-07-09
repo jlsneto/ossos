@@ -12,22 +12,23 @@ export default function lookSolver( tar: IKTarget, chain: IKChain, pose: Pose, D
     // NOTE: A resolved target should have the WS transform of the root
     // bone and its parent. No need to recompute a common bit of info
     // in the solver itself anymore.
-    const lnk = chain.links[0];
+    const lnk  = chain.links[0];
+    const tDir = new Vec3();
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Swing Rotation
-    const axes = lnk.axes.getFromQuat( tar.rworld.rot ); // Get axes qi directions of the root bone
+    tDir.fromQuat( tar.rworld.rot, lnk.axes.swing );
     const rot  = new Quat()
-        .fromSwing( axes.swing, tar.swing )              // Create Swing Rotation
-        .mul( tar.rworld.rot );                          // Apply swing to current bone rotation
+        .fromSwing( tDir, tar.swing )   // Create Swing Rotation
+        .mul( tar.rworld.rot );         // Apply swing to current bone rotation
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Twist Rotation
-    const twistDir  = new Vec3().fromQuat( rot, lnk.axes.twist );
+    tDir.fromQuat( rot, lnk.axes.twist );
+    if( Vec3.dot( tar.twist, tDir ) < 0.999999 ){
+        const twistReset = new Quat().fromSwing( tDir, tar.twist );
 
-    if( Vec3.dot( tar.twist, twistDir ) < 0.999 ){
-        const twistReset = new Quat().fromSwing( twistDir, tar.twist );
-
+        // Make sure there is no rotational artifacts from opposite hemisphere rotations
         if( Vec3.dot( twistReset, rot ) < 0 ) twistReset.negate();
 
         rot.pmul( twistReset );
@@ -40,7 +41,8 @@ export default function lookSolver( tar: IKTarget, chain: IKChain, pose: Pose, D
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     if( Debug ){
-        Debug.ln.add( tar.startPos, new Vec3().fromAdd( twistDir, tar.startPos ), 0x00ff00 );
+        // NOTE: Might of broken debug when doing some changes to solver
+        Debug.ln.add( tar.startPos, new Vec3().fromAdd( tDir, tar.startPos ), 0x00ff00 );
         Debug.ln.add( tar.startPos, new Vec3().fromAdd( tar.twist, tar.startPos ), 0xffffff );
         Debug.ln.add( tar.startPos, tar.endPos, 0xffffff );
     }
