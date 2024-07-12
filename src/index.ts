@@ -18,22 +18,47 @@ export { MatrixSkin, DQTSkin, TranMatrixSkin, DualQuatSkin, SQTSkin };
 // #endregion
 
 // #region KINEMATICS
-import IKTarget         from './kinematics/IKTarget';
-import { IKChain }      from './kinematics/IKChain';
-import { BoneAxes, AxesDirections } 
-                        from './kinematics/BoneAxes';
+// import IKTarget         from './kinematics/IKTarget';
+// import { IKChain }      from './kinematics/IKChain';
+// import { BoneAxes, AxesDirections }
+//                         from './kinematics/BoneAxes';
 
-import aimChainSolver   from './kinematics/solvers/aimChainSolver';
-import twoBoneSolver    from './kinematics/solvers/twoBoneSolver';
-import Fabrik           from './kinematics/solvers/Fabrik';
+// import aimChainSolver   from './kinematics/solvers/aimChainSolver';
+// import twoBoneSolver    from './kinematics/solvers/twoBoneSolver';
+// import Fabrik           from './kinematics/solvers/Fabrik';
 
-import limbSolver       from './kinematics/compose/limbSolver';
-import fabrikSolver     from './kinematics/compose/fabrikSolver';
+// import limbSolver       from './kinematics/compose/limbSolver';
+// import fabrikSolver     from './kinematics/compose/fabrikSolver';
 
-export { 
-    IKTarget, IKChain, BoneAxes, AxesDirections,
-    Fabrik, aimChainSolver, twoBoneSolver,
-    limbSolver, fabrikSolver,
+// export { 
+//     IKTarget, IKChain, BoneAxes, AxesDirections,
+//     Fabrik, aimChainSolver, twoBoneSolver,
+//     limbSolver, fabrikSolver,
+// };
+
+// IK OBJECTS
+import BoneAxes                 from './kinematics2/BoneAxes';
+import IKTarget                 from './kinematics2/IKTarget';
+import { IKChain, IKLink }      from './kinematics2/IKChain';
+import { IKRig }                from './kinematics2/IKRig';
+
+// RAW SOLVERS
+import lookSolver               from './kinematics2/solvers/lookSolver';
+import twoBoneSolver            from './kinematics2/solvers/twoBoneSolver';
+import swingTwistChainSolver    from './kinematics2/solvers/swingTwistChainSolver';
+import deltaMoveSolver          from './kinematics2/solvers/deltaMoveSolver';
+
+// COMPOSED SOLVERS
+import rootCompose              from './kinematics2/compose/rootCompose';
+import lookCompose              from './kinematics2/compose/lookCompose';
+import limbCompose              from './kinematics2/compose/limbCompose';
+import zCompose                 from './kinematics2/compose/zCompose';
+
+// EXOIRT
+export {
+    IKRig, IKTarget, IKChain, IKLink, BoneAxes,
+    lookSolver, twoBoneSolver, swingTwistChainSolver, deltaMoveSolver,
+    rootCompose, lookCompose, limbCompose, zCompose,
 };
 // #endregion
 
@@ -58,8 +83,8 @@ import RootMotion        from './animation/RootMotion';
 import PoseAnimator      from './animation/PoseAnimator';
 import Retarget          from './animation/Retarget';
 
-export { 
-    AnimationQueue, Easing, 
+export {
+    AnimationQueue, Easing,
     PoseAnimator, Clip, RootMotion, LerpType, TrackQuat, TrackVec3,
     Retarget,
 };

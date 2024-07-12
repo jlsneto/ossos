@@ -132,6 +132,9 @@ export class IKRig {
         for( const s of this.sets ) s.updatePose( this.pose, debug );
 
         // Recompute worldspace pose
+        // Note: Don't really need to updateWorld when only being
+        // used by Armature's Skin, it will recompute world based
+        // on the skinning option selected for the armature.
         this.pose.updateWorld();
     };
     // #endregion

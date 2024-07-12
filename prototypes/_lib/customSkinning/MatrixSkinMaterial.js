@@ -14,7 +14,7 @@ export default function MatrixSkinMaterial( val='cyan', skin ){
             case 'object': if( Array.isArray( val ) ) color = new THREE.Color( val[0], val[1], val[2] ); break;
             default: color = new THREE.Color( 'red' ); break;
         }
-        
+
         uniforms.color     = { type: 'vec3', value: color };
     }else{
         uniforms.texBase   = { type: 'sampler2D', value: val };
@@ -47,7 +47,7 @@ in vec2 uv;         // Vertex Texcoord
 in vec4 skinWeight; // Bone Weights
 in vec4 skinIndex;  // Bone Indices
 
-#define MAXBONES 100             // Arrays can not be dynamic, so must set a size
+#define MAXBONES 110             // Arrays can not be dynamic, so must set a size
 uniform mat4 pose[ MAXBONES ];
 
 uniform mat4 modelMatrix;       // Matrices should be filled in by THREE.JS Automatically.

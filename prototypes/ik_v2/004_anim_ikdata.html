@@ -28,7 +28,6 @@ window.addEventListener( 'load', async _=>{
     // Setup
     App.sphericalLook( 20, 20, 3, [ 0, 0.8, 0 ] );
     Debug = await useVisualDebug( App );
-;
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Load Skeleton & Animation
@@ -270,7 +269,9 @@ class IKBipedRig extends IKRig {
     }
     // #endregion
 }
+// #endregion
 
+// #region COMPUTE IK DATA
 class IKBipedPose {
     hip     = { swing:new Vec3(), twist:new Vec3(), deltaPos:new Vec3(), bindHeight:0 };
     spine   = { startSwing:new Vec3(), startTwist:new Vec3(), endSwing:new Vec3(), endTwist:new Vec3() };
@@ -374,8 +375,9 @@ function computeIKDeltaPos( rig, pose, chain, out ){
     // Save skeleton's hip height as a scalar for hip translations
     out.bindHeight = rig.hipHeight;
 }
+// #endregion
 
-
+// #region DEBUG IK DATA
 function debugIKBipedPose( ikp, rig, pose ){
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Render Limbs

@@ -3,9 +3,10 @@ import type Pose            from '../armature/Pose';
 import type IKTarget        from './IKTarget';
 import type { IKChain }     from './IKChain';
 
-import lookSolver           from './solvers/lookSolver';
-import twoBoneSolver        from './solvers/twoBoneSolver';
-import limbCompose          from './compose/limbCompose';
+import rootCompose              from './compose/rootCompose';
+import lookCompose              from './compose/lookCompose';
+import limbCompose              from './compose/limbCompose';
+import swingTwistChainSolver    from './solvers/swingTwistChainSolver';
 // #endregion
 
 // #region TYPES
@@ -16,10 +17,11 @@ export type TIKSolver = ( tar: IKTarget, chain: IKChain, pose: Pose, Debug ?: an
 
 // #region CONSTANTS
 
-export const IK_SOLVERS : Record<string, TIKSolver>  = {
-    'look'      : lookSolver,
-    'twoBone'   : twoBoneSolver,
-    'limb'      : limbCompose,
+export const IK_SOLVERS : Record<string, TIKSolver> = {
+    'root'          : rootCompose,
+    'look'          : lookCompose,
+    'limb'          : limbCompose,
+    'swingchain'    : swingTwistChainSolver,
 };
 
 // #endregion
