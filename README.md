@@ -6,9 +6,9 @@
 [![Ko-Fi](https://img.shields.io/badge/Ko_Fi-donate-orange?style=flat-square&logo=youtube)](https://ko-fi.com/sketchpunk)
 [![Patreon](https://img.shields.io/badge/Patreon-donate-red?style=flat-square&logo=youtube)](https://www.patreon.com/sketchpunk)
 
+Live Demo: https://sketchpunklabs.github.io/ossos_demo
 
-Demo: https://sketchpunklabs.github.io/ossos_demo
-
+Auto Skinning Side Project: https://github.com/sketchpunklabs/autoskinning
 
 ## Character Animation Library ###
 <img align="right" width="160" src="/_images/Epic_MegaGrants_Recipient_logo.png?raw=true">
