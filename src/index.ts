@@ -47,18 +47,21 @@ import lookSolver               from './kinematics2/solvers/lookSolver';
 import twoBoneSolver            from './kinematics2/solvers/twoBoneSolver';
 import swingTwistChainSolver    from './kinematics2/solvers/swingTwistChainSolver';
 import deltaMoveSolver          from './kinematics2/solvers/deltaMoveSolver';
+import trapezoidSolver          from './kinematics2/solvers/trapezoidSolver';
+import zSolver                  from './kinematics2/solvers/zSolver';
 
 // COMPOSED SOLVERS
 import rootCompose              from './kinematics2/compose/rootCompose';
 import lookCompose              from './kinematics2/compose/lookCompose';
 import limbCompose              from './kinematics2/compose/limbCompose';
 import zCompose                 from './kinematics2/compose/zCompose';
+import trapezoidCompose         from './kinematics2/compose/trapezoidCompose';
 
 // EXOIRT
 export {
     IKRig, IKTarget, IKChain, IKLink, BoneAxes,
-    lookSolver, twoBoneSolver, swingTwistChainSolver, deltaMoveSolver,
-    rootCompose, lookCompose, limbCompose, zCompose,
+    lookSolver, twoBoneSolver, swingTwistChainSolver, deltaMoveSolver, trapezoidSolver, zSolver,
+    rootCompose, lookCompose, limbCompose, zCompose, trapezoidCompose
 };
 // #endregion
 

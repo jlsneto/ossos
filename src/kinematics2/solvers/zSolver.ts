@@ -50,7 +50,7 @@ export default function ZSolver( tar: IKTarget, chain: IKChain, pose: Pose, debu
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // 1ST BONE : aLen, taLen, bhLen
 
-    // Dont need ?? as bone should always exist but to satisify TypeScript & 
+    // Dont need ?? as bone should always exist but to satisify TypeScript &
     // Nullable returns I wrote it to use the bind by some crazy chance it fails
     const root = pose.getBone( l0.index )?.local ?? l0.bind;
 
