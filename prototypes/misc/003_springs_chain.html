@@ -1,0 +1,309 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title></title></head>
+<style>canvas{ display:block; } body, html { padding:0px; margin:0px; width:100%; height:100%; }</style>
+<body><script type="module">
+// #region IMPORTS
+import useThreeWebGL2, { THREE, useDarkScene, useVisualDebug } from '../_lib/useThreeWebGL2.js';
+import facedCube           	from '../_lib/meshes/facedCube.js';
+import noise                from '../_thirdparty/perlin.js';
+// #endregion
+
+
+// #region MAIN
+let Debug;
+let App = useDarkScene( useThreeWebGL2() );
+let Ref   = {
+    time    : 0,
+    run     : false,
+};
+
+window.addEventListener( "load", async _=>{
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Setup
+    App.sphericalLook( 0, 20, 5, [ 0, 0.2, 0 ] );
+    Debug = await useVisualDebug( App );
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Ref.tester = new Tester();
+    Ref.tester
+        .setSpring( HookesLaw,  { mass:1, k:10, damp:1.0 } )
+        .debug();
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    App.createRenderLoop( onPreRender ).start();
+    // App.renderLoop();
+});
+
+window.addEventListener( 'keydown', e=>{
+    if( e.keyCode === 32 ){
+        Ref.run = !Ref.run;
+
+        if( !Ref.run ) Ref.tester.cube.position.fromArray( [0,0,0] );
+    }
+});
+
+function onPreRender( dt, et ){
+    Debug.reset();    
+    
+    if( Ref.run ){
+        Ref.time += dt;
+        Ref.tester
+            .moveSin( Ref.time, 1, 0.4 )
+            // .moveNoise( et )
+        ;
+    }
+    
+    Ref.tester.update( dt ).debug();
+}
+// #endregion
+
+
+// #region SHARED
+
+class ISpring{
+    // #region MAIN
+    tpos    = [0,0,0];  // Target Position
+    pos     = [0,0,0];  // Current Spring Position
+    vel     = [0,0,0];  // Current Velocity
+    damp    = 1;        // Damping or maybe Spring Constant
+    constructor(){}
+    // #endregion
+
+    // #region SETTERS
+    loadConfig( props ){
+        if( props.pos )  this.setPos( props.pos );
+        if( props.vel )  this.setVel( props.vel );
+        if( props.damp != undefined ) this.damp = props.damp;
+    }
+
+    setTarget( v ){
+        this.tpos[0] = v[0];
+        this.tpos[1] = v[1];
+        this.tpos[2] = v[2];
+        return this;
+    }
+
+    setPos( v ){
+        this.pos[0] = v[0];
+        this.pos[1] = v[1];
+        this.pos[2] = v[2];
+        return this;
+    }
+
+    setVel( v ){
+        this.vel[0] = v[0];
+        this.vel[1] = v[1];
+        this.vel[2] = v[2];
+        return this;
+    }
+    // #endregion
+
+    // #region METHODS
+    reset( tpos ){
+        this.pos[ 0 ]  = tpos[ 0 ];
+        this.pos[ 1 ]  = tpos[ 1 ];
+        this.pos[ 2 ]  = tpos[ 2 ];
+
+        this.tpos[ 0 ] = tpos[ 0 ];
+        this.tpos[ 1 ] = tpos[ 1 ];
+        this.tpos[ 2 ] = tpos[ 2 ];
+
+        this.vel[ 0 ]  = 0;
+        this.vel[ 1 ]  = 0;
+        this.vel[ 2 ]  = 0;
+        return this;
+    }
+
+    update( dt ){
+        console.log( 'Spring.update has not be implemented' );
+    }
+    // #endregion
+}
+
+class Tester{
+    constructor( ){
+        this.offset = [0,0.5,0];
+        this.cube   = facedCube( null, 0.3 );
+        this.spring = null;
+        this.chain  = new Chain( 3, 0.5 );
+
+        App.scene.add( this.cube );
+    }
+
+    setSpring( solver, props ){ 
+        // obj.setPos( this.getTarget() );
+        // this.spring = obj;
+
+        this.chain.updateWorld( this.cube.position.toArray() );
+
+        for( let i=0; i < this.chain.items.length; i++ ){
+            const ci  = this.chain.items[ i ];
+            ci.spring = new solver( props ).reset( ci.wpos ); 
+        }
+
+        return this;
+    }
+
+    getTarget(){
+        return [
+            this.cube.position.x + this.offset[0],
+            this.cube.position.y + this.offset[1],
+            this.cube.position.z + this.offset[2],
+        ];
+    }
+
+    moveSin( et, r=3, s=1.2 ){
+        this.cube.position.x = Math.sin( et / s ) * r;
+        return this;
+    }
+
+    moveNoise( et ){
+        const t = 2.5;
+        const r = 3;
+        const s = 1;
+        this.cube.position.x = r * noise.perlin2( et / t, 0 );
+        this.cube.position.z = r * noise.perlin2( 0, et / t );
+        this.cube.position.y = s * noise.perlin2( et / t, et / t );
+        return this;
+    }
+
+    update( dt ){
+        this.chain.update( dt, this.cube.position.toArray() );
+        return this;
+    }
+
+    debug(){
+        let p = this.cube.position.toArray();
+        for( let i of this.chain.items ){
+            Debug.pnt.add( i.wpos, 0x909090, 3, 1 );
+            Debug.pnt.add( i.spring.pos, 0x00ff00, 3, 1 );
+            Debug.ln.add( p, i.spring.pos, 0x00ff00 );
+            p = i.spring.pos;
+        }
+
+        return this;
+    }
+}
+
+class Chain{
+    items = [];
+    constructor( cnt, dist ){
+        for( let i=0; i < cnt; i++ ){
+            this.items.push( new ChainItem( dist ) );
+        }
+    }
+
+    update( dt, offset ){
+        // this.updateWorld( offset );
+        let p = offset;
+
+        for( let i of this.items ){
+            // Compute current worldspace position
+            i.wpos[ 0 ] = p[ 0 ] + i.offset[ 0 ];
+            i.wpos[ 1 ] = p[ 1 ] + i.offset[ 1 ];
+            i.wpos[ 2 ] = p[ 2 ] + i.offset[ 2 ];
+            
+            // Execute Spring
+            i.spring
+                .setTarget( i.wpos )
+                .update( dt );
+
+            // Clamp spring position
+            // normalize * dist + origin
+            const x = i.spring.pos[ 0 ] - p[ 0 ];
+            const y = i.spring.pos[ 1 ] - p[ 1 ];
+            const z = i.spring.pos[ 2 ] - p[ 2 ];
+            const m = 1 / Math.sqrt( x**2 + y**2 + z**2 );
+
+            i.spring.pos[ 0 ] = ( x * m ) * i.dist + p[ 0 ];
+            i.spring.pos[ 1 ] = ( y * m ) * i.dist + p[ 1 ];
+            i.spring.pos[ 2 ] = ( z * m ) * i.dist + p[ 2 ];
+
+            // Spring pos is parent offset for next item
+            p = i.spring.pos;
+        }
+    }
+
+    updateWorld( offset ){
+        let p = offset;
+        let c = null;
+        for( let i=0; i < this.items.length; i++ ){
+            c = this.items[ i ];
+            c.wpos[ 0 ] = p[ 0 ] + c.offset[ 0 ];
+            c.wpos[ 1 ] = p[ 1 ] + c.offset[ 1 ];
+            c.wpos[ 2 ] = p[ 2 ] + c.offset[ 2 ];
+            p = c.wpos;
+        }
+    }
+}
+
+class ChainItem{
+    constructor( dist ){
+        this.dist   = dist;
+        this.offset = [0,dist,0];   // offset position
+        this.wpos   = [0,0,0];      // world position
+        this.spring = null;
+    }
+}
+
+// #endregion
+
+
+class HookesLaw extends ISpring{
+    // #region MAIN
+    mass    = 1;
+    k       = 1;
+    accel   = [0,0,0];
+    sforce  = [0,0,0];  // Spring force
+    dforce  = [0,0,0];  // Damping force
+    tforce  = [0,0,0];  // Total Force
+
+    constructor( props={ mass:1, k:1, damp:1 } ){
+        super();
+        if( props ) this.loadConfig( props );
+    }
+    // #endregion
+
+    loadConfig( props ){
+        super.loadConfig( props );
+        if( props.mass ) this.mass = props.mass;
+        if( props.k )    this.k    = props.k;
+    }
+
+    update( dt ){
+        // Calculate acceleration based on Hooke's Law: F = -k * x
+        // Calculate the force exerted by the spring : springForce = -springConstant * ( position - targetPosition )
+        this.sforce[ 0 ] = -this.k * ( this.pos[0] - this.tpos[0] );
+        this.sforce[ 1 ] = -this.k * ( this.pos[1] - this.tpos[1] );
+        this.sforce[ 2 ] = -this.k * ( this.pos[2] - this.tpos[2] );
+
+        // Calculate the damping force : dampingForce = -damping * velocity
+        this.dforce[ 0 ] = -this.damp * this.vel[ 0 ];
+        this.dforce[ 1 ] = -this.damp * this.vel[ 1 ];
+        this.dforce[ 2 ] = -this.damp * this.vel[ 2 ];
+
+        // Calculate the total force : totalForce = springForce + dampingForce
+        this.tforce[ 0 ] = this.sforce[ 0 ] + this.dforce[ 0 ];
+        this.tforce[ 1 ] = this.sforce[ 1 ] + this.dforce[ 1 ];
+        this.tforce[ 2 ] = this.sforce[ 2 ] + this.dforce[ 2 ];
+
+        // Update acceleration based on Newton's second law: F = m * a
+        // acceleration = totalForce / this.mass;
+        this.accel[ 0 ] = this.tforce[ 0 ] / this.mass;
+        this.accel[ 1 ] = this.tforce[ 1 ] / this.mass;
+        this.accel[ 2 ] = this.tforce[ 2 ] / this.mass;
+
+        // Update velocity and position using the acceleration
+        this.vel[ 0 ]  += this.accel[ 0 ] * dt;
+        this.vel[ 1 ]  += this.accel[ 1 ] * dt;
+        this.vel[ 2 ]  += this.accel[ 2 ] * dt;
+
+        this.pos[ 0 ]  += this.vel[ 0 ] * dt;
+        this.pos[ 1 ]  += this.vel[ 1 ] * dt;
+        this.pos[ 2 ]  += this.vel[ 2 ] * dt;
+        
+        return this;
+    }
+}
+
+
+</script></body></html>

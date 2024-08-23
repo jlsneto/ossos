@@ -1,6 +1,9 @@
 3D Line Fitting even shows how to do PLANE FITTING EXAMPLE
 https://zalo.github.io/blog/line-fitting/
 
+ROPES
+https://github.com/Ali10555/OptimizedRopesAndCables
+
 
 GOOD EXAMPLE OF CCD WITH CONSTRAINTS
 https://zalo.github.io/blog/inverse-kinematics/
@@ -25,3 +28,17 @@ https://zalo.github.io/blog/kabsch/
 
 Great examples of segments, even a setup to control a plane
 https://zalo.github.io/blog/closest-point-between-segments/
+
+
+AMAZING PROCEDURAL IK TRAVERSAL
+https://x.com/keenanwoodall/status/1822031721296167186
+
+
+SPRING SUSPENSION
+https://pastebin.com/VGcfxekP
+https://pastebin.com/ZV5FvMg6
+
+
+
+https://zalo.github.io/blog/inverse-kinematics/ THIS IS AWESOME, Quaternions but with Constraints
+https://github.com/zalo/zalo.github.io/blob/master/assets/js/IK/IKExample.js

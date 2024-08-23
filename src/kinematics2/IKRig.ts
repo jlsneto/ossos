@@ -89,7 +89,6 @@ export class IKRig {
 
         this.sets.push( s );
         this.#reorder();
-
         return this;
     }
 
@@ -127,7 +126,7 @@ export class IKRig {
     runSolvers( debug: any ){ this.executor( this, debug ); return this; }
 
     // Default Executor, Will use IKSet.order to determine execution order
-    executor = ( rig: IKRig, debug: any )=>{
+    executor = ( _rig: IKRig, debug: any )=>{
         // Run IK solver for each chain set
         for( const s of this.sets ) s.updatePose( this.pose, debug );
 

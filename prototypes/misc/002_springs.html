@@ -1,0 +1,431 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title></title></head>
+<style>canvas{ display:block; } body, html { padding:0px; margin:0px; width:100%; height:100%; }</style>
+<body><script type="module">
+// #region IMPORTS
+import useThreeWebGL2, { THREE, useDarkScene, useVisualDebug } from '../_lib/useThreeWebGL2.js';
+import facedCube           	from '../_lib/meshes/facedCube.js';
+// import { vec3, quat }       from 'gl-matrix';
+// #endregion
+
+
+// #region MAIN
+let Debug;
+let App = useDarkScene( useThreeWebGL2() );
+let Ref   = {
+    items : []
+};
+
+// https://github.com/sketchpunk/temp/blob/master/Fungi_v5/fungi/maths/Spring.js
+// TODO : https://github.com/pqml/spring
+
+window.addEventListener( "load", async _=>{
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Setup
+    App.sphericalLook( 20, 20, 4, [ 0, 0.8, 0 ] );
+    Debug = await useVisualDebug( App );
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    const cube = facedCube();
+    cube.position.set( 0, 0.5, 0 );
+
+    Ref.items.push( new SpringTester( cube, new DamperExp( 0.5 ) ) );
+    Ref.items.push( new SpringTester( cube, new DamperHalfLife( 0.5 ), -0.8 ) );
+    Ref.items.push( new SpringTester( cube, new DamperHalfLifeExp( 0.5 ), -1.6 ) );
+    Ref.items.push( new SpringTester( cube, new SpringDamperImplicit( 0.5, 1 ), -2.4 ) );
+    Ref.items.push( new SpringTester( cube, new SpringDamperImplicit2( 10, 20 ), -3.2 ) ); // under 0.5, 1, crit: 2, 1, over 10, 20
+    Ref.items.push( new SpringTester( cube, new CriticalSpringDamper( 0.5 ), -4 ) );
+
+    
+    // Ref.items.push( new SpringTester( cube, new SpringIE_Float().setOscPs( 1 ).setDamp( 0.4 ), 1.0 ) );    
+
+    // Ref.items.push( new SpringTester( cube, new SpringA( 0.4, 4 ), -1.0 ) );
+    // Ref.items.push( new SpringTester( cube, new SpringVRM( 0.4, 0.3 ), -2.0 ) );
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    App.createRenderLoop( onPreRender ).start();
+    // App.renderLoop();
+});
+
+function onPreRender( dt, et ){
+    const x = Math.floor( et / 2.2 );
+    const s = ( (x & 1) === 1 )? -1 : 1;
+    for( let i of Ref.items ) i.update( dt, 3 * s );    
+}
+// #endregion
+
+class SpringTester{
+    constructor( mesh, spring, z=0 ){
+        const scl = 0.5;
+        
+        this.mesh = mesh.clone();
+        this.mesh.scale.set( scl, scl, scl );
+        this.mesh.position.z = z;
+        App.scene.add( this.mesh );
+
+        this.spring = spring;
+    }
+
+    update( dt, target ){
+        this.spring.setTarget( target ).update( dt );
+        this.mesh.position.x = this.spring.value;
+    }
+}
+
+// https://theorangeduck.com/page/spring-roll-call
+// http://allenchou.net/2015/04/game-math-precise-control-over-numeric-springing/
+
+// https://www.youtube.com/watch?v=FZekwtIO0I4  Has Final Code
+// https://gist.github.com/EgoMoose/777ed827e89b69d479ea407e79261b97
+
+// https://iamralpht.github.io/equations/
+
+// https://www.gamedev.net/tutorials/programming/math-and-physics/towards-a-simpler-stiffer-and-more-stable-spring-r3227/
+
+// https://github.com/zalo/MathUtilities/blob/master/Assets/Verlet/Rigidbody/RotationalSpring/RotationalSpring.cs
+
+
+// https://gamedev.stackexchange.com/questions/80081/frame-rate-independent-friction-on-movement-in-2d-game
+// //*** Set friction value
+// friction = 5f;
+// //*** Calculate Fiction decay
+// xRatio = 1 / (1 + (Time.deltaTime * friction));
+// //*** Decay velocity
+// velocity *= xRatio;
+// //*** Set Position
+// _position += velocity * Time.deltaTime;
+
+// https://github.com/sketchpunk/Fungi/blob/master/fungi/maths/Spring.js implicit_euler & semi_implicit_euler
+// https://github.com/sketchpunk/temp/blob/master/Fungi_v5_5/fungi/maths/Spring.js
+// https://github.com/sketchpunk/temp/blob/master/Fungi_v5_5/fungi.ik/BoneSpring.js
+// https://github.com/sketchpunk/temp/blob/master/Fungi_v5_5/fungi/maths/IESpring.js#L132   THERE IS ALSO A MASS TENSION SPRING??
+// https://github.com/sketchpunk/temp/blob/aa43dc522d7769479b676810d5fe1ed001ce4a05/Fungi_v5/tools/path_anim/SpringFloat.js#L4
+// https://github.com/sketchpunk/temp/blob/aa43dc522d7769479b676810d5fe1ed001ce4a05/Fungi_v5/fungi.3js/_ignore/chasing_spring.html#L536
+// https://github.com/sketchpunk/temp/blob/aa43dc522d7769479b676810d5fe1ed001ce4a05/Fungi_v5/fungi.armature/BoneSpring.js#L133
+// https://github.com/sketchpunklabs/ossos/blob/main/src/bonespring/SpringChain.ts
+// https://github.com/sketchpunklabs/ossos/blob/main/src/bonespring/implicit_euler/SpringFloat.ts
+
+// https://medium.com/hackernoon/the-spring-factory-4c3d988e7129#.otyvxccwy
+// https://medium.com/hackernoon/the-bounce-factory-3498de1e5262#.t72mlszex
+
+// https://medium.com/hackernoon/ease-in-out-the-sigmoid-factory-c5116d8abce9
+// https://medium.com/hackernoon/ease-out-the-half-sigmoid-7240df433d98
+// function sigmoidFactory (k) {
+// 	function base (t) {
+// 		return (1 / (1 + Math.exp(-k * t))) - 0.5;
+// 	}
+
+// 	var correction = 0.5 / base(1);
+
+// 	return function (t) {
+// 		t = clamp(t, 0, 1);
+// 		return correction * base(2 * t - 1) + 0.5;
+// 	};
+// }
+
+// function clamp (val, lower, upper) {
+// 	return Math.max(Math.min(val, upper), lower);
+// }
+
+
+// class SpringMassSystem {
+//     constructor(mass, springConstant, initialPosition, initialVelocity) {
+//         this.mass = mass;
+//         this.springConstant = springConstant;
+//         this.position = initialPosition;
+//         this.velocity = initialVelocity;
+//         this.acceleration = 0;
+//     }
+
+//     update(deltaTime) {
+//         // Calculate acceleration based on Hooke's Law: F = -k * x
+//         this.acceleration = (-this.springConstant * this.position) / this.mass;
+
+//         // Update velocity and position using the acceleration
+//         this.velocity += this.acceleration * deltaTime;
+//         this.position += this.velocity * deltaTime;
+
+//         // Optionally, you can apply damping or other effects here
+//     }
+
+//     getState() {
+//         return {
+//             position: this.position,
+//             velocity: this.velocity,
+//             acceleration: this.acceleration
+//         };
+//     }
+// }
+
+class ISpring{
+    // #region MAIN
+    tpos    = [0,0,0];  // Target Position
+    pos     = [0,0,0];  // Current Spring Position
+    vel     = [0,0,0];  // Current Velocity
+    damp    = 1;        // Damping or Spring Constant
+    
+    constructor( props={} ){
+        if( props.pos )  this.setPos( props.pos );
+        if( props.vel )  this.setVel( props.vel );
+    }
+    // #endregion
+
+    // #region SETTERS
+    setTarget( v ){
+        this.tpos[0] = v[0];
+        this.tpos[1] = v[1];
+        this.tpos[2] = v[2];
+        return this;
+    }
+
+    setPos( v ){
+        this.pos[0] = v[0];
+        this.pos[1] = v[1];
+        this.pos[2] = v[2];
+        return this;
+    }
+
+    setVel( v ){
+        this.vel[0] = v[0];
+        this.vel[1] = v[1];
+        this.vel[2] = v[2];
+        return this;
+    }
+    // #endregion
+
+    // #region METHODS
+    update( dt ){
+        console.log( 'Spring.update has not be implemented' );
+    }
+    // #endregion
+}
+
+class HookesLaw extends ISpring{
+    mass = 1;
+    k    = 1;
+    constructor( props={} ){
+        super( props );
+        if( props.mass ) this.mess = props.mass;
+    }
+}
+
+class DamperExp{
+    constructor( damp ){
+        this.target     = 0;
+        this.value      = 0;
+        this.damping    = damp;
+    }
+
+    setTarget( v ){ this.target = v; return this; }
+
+    update( dt ){
+        const ft    = 1 / 60; // fixed timestep
+        const t     = 1.0 - Math.pow( 1.0 / ( 1.0 - ft * this.damping ), -dt / ft );
+        this.value  = ( 1 - t ) * this.value + t * this.target;
+        return this;
+    }
+}
+
+
+class DamperHalfLife{
+    constructor( hf ){
+        this.target     = 0;
+        this.value      = 0;
+        this.halfLife   = hf; // time it takes for the distance to the target to reduce by half:
+    }
+
+    setTarget( v ){ this.target = v; return this; }
+
+    update( dt ){
+        const t     = 1.0 - Math.pow( 2, -dt / this.halfLife );
+        this.value  = ( 1 - t ) * this.value + t * this.target;
+        return this;
+    }
+}
+
+
+class DamperHalfLifeExp{
+    constructor( hf ){
+        this.target     = 0;
+        this.value      = 0;
+        this.halfLife   = hf; // time it takes for the distance to the target to reduce by half:
+    }
+
+    setTarget( v ){ this.target = v; return this; }
+
+    fastNegExp( x ){ return 1 / (1 + x + 0.48*x*x + 0.235*x*x*x); }
+    update( dt ){
+        // log(2) = 0.69314718056
+        const eps   = 1e-5; // Add a tiny epsilon to prevent division by zero
+        const t     = 1 - this.fastNegExp( ( 0.69314718056 * dt ) / ( this.halfLife + eps ) );
+        this.value  = ( 1 - t ) * this.value + t * this.target;
+        return this;
+    }
+}
+
+
+class SpringDamperImplicit{
+    constructor( damp=0.5, stiff=1 ){
+        this.target     = 0;
+        this.value      = 0;
+        this.vel        = 0;
+        this.damping    = damp;  // halflife?
+        this.stiffness  = stiff; // frequency?
+    }
+
+    setTarget( v ){ this.target = v; return this; }
+
+    fastNegExp( x ){ return 1 / (1 + x + 0.48*x*x + 0.235*x*x*x); }
+    copySign(x, y){ return Math.sign(x) === Math.sign(y) ? x : -x; };
+    fastAtan( x ){
+        const z     = Math.abs( x );
+        const w     = ( z > 1 )? 1 / z : z;
+        const y     = ( Math.PI / 4 ) * w - w*(w - 1) * ( 0.2447 + 0.0663 * w );
+        const rtn   = ( z > 1 )? Math.PI / 2 - y : y;
+        return this.copySign( rtn, x ); // copysign( (z > 1)? Math.PI / 2.0 - y : y, x );
+    }
+
+    update( dt ){
+        const eps = 1e-5;
+        const c   = this.target + ( this.damping ) / ( this.stiffness + eps );      // is an offset on the vertical axis
+        const vc  = this.value - c;
+        const y   = this.damping * 0.5;                                             // time it takes to decay, a bit like our half-life parameter
+        const w   = Math.sqrt( this.stiffness - this.damping**2 * 0.25 );           // frequency of oscillations
+        const p   = this.fastAtan( ( this.vel + vc * y) / ( -vc*w + eps ) );        // the phase of oscillations
+        let   j   = Math.sqrt( ( this.vel + y*vc )**2 / ( w*w + eps ) + vc**2 );    // amplitude
+        j = ( vc > 0 )? j : -j;
+
+        const wdtp = w * dt + p;
+        const eydt = this.fastNegExp( y * dt );
+        const sub  = j * eydt * Math.cos( wdtp );
+        
+        this.value = sub + c;
+        this.vel   = -y * sub - w * j * eydt * Math.sin( wdtp );
+        return this;
+    }
+}
+
+
+class SpringDamperImplicit2{
+    constructor( damp=0.5, stiff=1 ){
+        this.target     = 0;
+        this.value      = 0;
+        this.vel        = 0;
+        this.damping    = damp;  // halflife?
+        this.stiffness  = stiff; // frequency?
+    }
+
+    setTarget( v ){ this.target = v; return this; }
+
+    fastNegExp( x ){ return 1 / (1 + x + 0.48*x*x + 0.235*x*x*x); }
+    copySign(x, y){ return Math.sign(x) === Math.sign(y) ? x : -x; };
+    fastAtan( x ){
+        const z     = Math.abs( x );
+        const w     = ( z > 1 )? 1 / z : z;
+        const y     = ( Math.PI / 4 ) * w - w*(w - 1) * ( 0.2447 + 0.0663 * w );
+        const rtn   = ( z > 1 )? Math.PI / 2 - y : y;
+        return this.copySign( rtn, x ); // copysign( (z > 1)? Math.PI / 2.0 - y : y, x );
+    }
+
+    halflife_to_damping( halflife, eps = 1e-5){ return (4.0 * 0.69314718056) / (halflife + eps); }
+    damping_to_halflife( damping, eps = 1e-5 ){ return (4.0 * 0.69314718056) / (damping + eps); }
+
+    frequency_to_stiffness( frequency ){ return ( 2.0 * Math.PI * frequency )**2; }
+    stiffness_to_frequency( stiffness ){ return Math.sqrt( stiffness ) / ( 2 * Math.PI ); }
+
+    critical_halflife( frequency ){ return this.damping_to_halflife( Math.sqrt( this.frequency_to_stiffness(frequency) * 4 ) ); }
+    critical_frequency( halflife ){ return this.stiffness_to_frequency( halflife_to_damping(halflife)**2 * 0.25 ); }
+
+    update( dt ){
+        // Can use Freq + Halflife values in place of Stiffness & Damping if the convertion functions
+        // float s = frequency_to_stiffness(frequency);
+        // float d = halflife_to_damping(halflife); 
+
+        const eps   = 1e-5;
+        const c     = this.target + ( this.damping ) / ( this.stiffness + eps );
+        const vc    = this.value - c;
+        const y     = this.damping * 0.5; 
+        const damp  = this.stiffness - this.damping**2 * 0.25;
+        
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // Critically Damped
+        if( Math.abs( damp ) < eps ){
+            const j1   = this.vel + vc * y;    
+            const eydt = this.fastNegExp( y * dt );
+            
+            this.value = vc * eydt + dt * j1 * eydt + c;
+            this.vel   = -y * vc * eydt - y * dt * j1 * eydt + j1 *eydt;
+
+            console.log( 'crit damp' );
+
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // Under Damped
+        }else if ( damp > 0.0){ 
+            const w     = Math.sqrt( damp );
+            let   j     = Math.sqrt( ( this.vel + y * vc )**2 / ( w * w + eps ) + vc**2 );
+            const p     = this.fastAtan( ( this.vel + vc * y) / ( -vc * w + eps ) );
+            const eydt  = this.fastNegExp( y *dt );
+
+            j = ( vc > 0 )? j : -j;
+            
+            const wdtp = w * dt + p;
+            const sub  = j * eydt * Math.cos( wdtp );
+            this.value = sub + c;
+            this.vel   = -y * sub - w * j * eydt * Math.sin( wdtp );
+
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // Over Damped
+        }else if ( damp < 0.0 ){ 
+            const sqr   = Math.sqrt( this.damping**2 - 4 * this.stiffness );
+            const y0    = ( this.damping + sqr ) * 0.5;
+            const y1    = ( this.damping - sqr ) * 0.5;
+            const j1    = ( c * y0 - this.value * y0 - this.vel ) / ( y1 - y0 );
+            const j0    = this.value - j1 - c;
+            
+            const ey0dt = this.fastNegExp( y0 * dt );
+            const ey1dt = this.fastNegExp( y1 * dt );
+
+            this.value  = j0 * ey0dt + j1 * ey1dt + c;
+            this.vel    = -y0 * j0 * ey0dt - y1 * j1 * ey1dt;
+        }
+        return this;
+    }
+}
+
+
+// The noise smoothing example uses this one
+class CriticalSpringDamper{
+    constructor( halfLife ){
+        this.target     = 0;
+        this.value      = 0;
+        this.damping    = (4.0 * 0.69314718056) / (halfLife + 1e-5) * 0.5; // For math, need to include division by 2 ( * 0.5 )
+    }
+
+    setTarget( v ){ this.target = v; return this; }
+
+    fastNegExp( x ){ return 1 / (1 + x + 0.48*x*x + 0.235*x*x*x); }
+    update( dt ){
+        const j0   = this.value - this.target;
+        const j1   = this.vel + j0 * this.damping;
+        const eydt = this.fastNegExp( this.damping * dt );
+        this.value = eydt * ( j0 + j1 * dt ) + this.target;
+        this.vel   = eydt * ( this.vel - j1 * this.damping * dt );
+        return this;
+    }
+}
+
+// NOTE: There is a spring example that is able to prediction future placement of a character
+// NOTE: There is also an spring example of a way to cross-fade animations with offsets
+
+
+                // // Spring force
+                // float contactDepth = hit.distance - suspensionLength;
+                // float springForce = - stiffness * contactDepth;
+             
+                // //Damper force
+                // float compressionSpeed = (contactDepth - lastContactDepth)/Time.deltaTime;
+                // float damperForce = - damping * compressionSpeed;
+            
+                // // Final force or suspension force
+                // float suspensionForce = springForce + damperForce;
+
+</script></body></html>
