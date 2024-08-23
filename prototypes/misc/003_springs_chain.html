@@ -25,8 +25,15 @@ window.addEventListener( "load", async _=>{
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     Ref.tester = new Tester();
     Ref.tester
-        .setSpring( HookesLaw,  { mass:1, k:10, damp:1.0 } )
+        // .setSpring( HookesLaw, { mass:1, k:2, damp:1.0 } )               // Same for all points
+        // .setSpring( HookesLaw, { mass:1, k:[ 3, 10 ], damp:1.0 } )       // Lerp Range for K
+        // .setSpring( HookesLaw, { mass:1, k:[ 1, 10, 1 ], damp:1.0 } )    // Individual Setting of K
+
+        .setSpring( Tension, { k:[5,10], damp:0.4 } )
+
         .debug();
+
+    // console.log( Ref.tester.chain.items );
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     App.createRenderLoop( onPreRender ).start();
@@ -37,7 +44,7 @@ window.addEventListener( 'keydown', e=>{
     if( e.keyCode === 32 ){
         Ref.run = !Ref.run;
 
-        if( !Ref.run ) Ref.tester.cube.position.fromArray( [0,0,0] );
+        // if( !Ref.run ) Ref.tester.cube.position.fromArray( [0,0,0] );
     }
 });
 
@@ -47,8 +54,8 @@ function onPreRender( dt, et ){
     if( Ref.run ){
         Ref.time += dt;
         Ref.tester
-            .moveSin( Ref.time, 1, 0.4 )
-            // .moveNoise( et )
+            .moveSin( Ref.time, 3, 1.2 )
+            // .moveNoise( Ref.time )
         ;
     }
     
@@ -64,15 +71,30 @@ class ISpring{
     tpos    = [0,0,0];  // Target Position
     pos     = [0,0,0];  // Current Spring Position
     vel     = [0,0,0];  // Current Velocity
-    damp    = 1;        // Damping or maybe Spring Constant
+    props   = {
+        damp : 1,       // Damping or maybe Spring Constant
+    };
     constructor(){}
     // #endregion
 
     // #region SETTERS
-    loadConfig( props ){
-        if( props.pos )  this.setPos( props.pos );
-        if( props.vel )  this.setVel( props.vel );
-        if( props.damp != undefined ) this.damp = props.damp;
+    loadConfig( props, t=0 ){
+        const ti = 1 - t;
+        for( const [ k, v ] of Object.entries(props) ){
+            if( this.props.hasOwnProperty( k ) ){
+                if( Array.isArray( v ) ){
+
+                    // Lerp the property value
+                    if( v.length === 2 ) this.props[ k ] = v[ 0 ] * ti + v[ 1 ] * t;
+                    // Specific index assignment
+                    else                 this.props[ k ] = v[ Math.floor( t * ( v.length - 1 ) ) ];
+                
+                }else this.props[ k ] = v;
+            }else{
+                console.log( 'Spring property does not exist: ', k );
+            }
+        }
+        return this;
     }
 
     setTarget( v ){
@@ -135,9 +157,13 @@ class Tester{
 
         this.chain.updateWorld( this.cube.position.toArray() );
 
-        for( let i=0; i < this.chain.items.length; i++ ){
+        const cnt = this.chain.items.length - 1;
+
+        for( let i=0; i <= cnt; i++ ){
             const ci  = this.chain.items[ i ];
-            ci.spring = new solver( props ).reset( ci.wpos ); 
+            ci.spring = new solver()
+                .loadConfig( props, i / cnt )
+                .reset( ci.wpos ); 
         }
 
         return this;
@@ -250,36 +276,36 @@ class ChainItem{
 
 class HookesLaw extends ISpring{
     // #region MAIN
-    mass    = 1;
-    k       = 1;
-    accel   = [0,0,0];
+    accel   = [0,0,0];  // Acceleration
     sforce  = [0,0,0];  // Spring force
     dforce  = [0,0,0];  // Damping force
     tforce  = [0,0,0];  // Total Force
 
     constructor( props={ mass:1, k:1, damp:1 } ){
         super();
+
+        this.props.mass = 1; // Another scalar to sim mass
+        this.props.k    = 1; // Spring Constant
+
         if( props ) this.loadConfig( props );
     }
     // #endregion
 
-    loadConfig( props ){
-        super.loadConfig( props );
-        if( props.mass ) this.mass = props.mass;
-        if( props.k )    this.k    = props.k;
-    }
-
     update( dt ){
         // Calculate acceleration based on Hooke's Law: F = -k * x
+        const damp  = this.props.damp;
+        const mass  = this.props.mass;
+        const k     = this.props.k;
+        
         // Calculate the force exerted by the spring : springForce = -springConstant * ( position - targetPosition )
-        this.sforce[ 0 ] = -this.k * ( this.pos[0] - this.tpos[0] );
-        this.sforce[ 1 ] = -this.k * ( this.pos[1] - this.tpos[1] );
-        this.sforce[ 2 ] = -this.k * ( this.pos[2] - this.tpos[2] );
+        this.sforce[ 0 ] = -k * ( this.pos[ 0 ] - this.tpos[ 0 ] );
+        this.sforce[ 1 ] = -k * ( this.pos[ 1 ] - this.tpos[ 1 ] );
+        this.sforce[ 2 ] = -k * ( this.pos[ 2 ] - this.tpos[ 2 ] );
 
         // Calculate the damping force : dampingForce = -damping * velocity
-        this.dforce[ 0 ] = -this.damp * this.vel[ 0 ];
-        this.dforce[ 1 ] = -this.damp * this.vel[ 1 ];
-        this.dforce[ 2 ] = -this.damp * this.vel[ 2 ];
+        this.dforce[ 0 ] = -damp * this.vel[ 0 ];
+        this.dforce[ 1 ] = -damp * this.vel[ 1 ];
+        this.dforce[ 2 ] = -damp * this.vel[ 2 ];
 
         // Calculate the total force : totalForce = springForce + dampingForce
         this.tforce[ 0 ] = this.sforce[ 0 ] + this.dforce[ 0 ];
@@ -288,9 +314,9 @@ class HookesLaw extends ISpring{
 
         // Update acceleration based on Newton's second law: F = m * a
         // acceleration = totalForce / this.mass;
-        this.accel[ 0 ] = this.tforce[ 0 ] / this.mass;
-        this.accel[ 1 ] = this.tforce[ 1 ] / this.mass;
-        this.accel[ 2 ] = this.tforce[ 2 ] / this.mass;
+        this.accel[ 0 ] = this.tforce[ 0 ] / mass;
+        this.accel[ 1 ] = this.tforce[ 1 ] / mass;
+        this.accel[ 2 ] = this.tforce[ 2 ] / mass;
 
         // Update velocity and position using the acceleration
         this.vel[ 0 ]  += this.accel[ 0 ] * dt;
@@ -305,5 +331,34 @@ class HookesLaw extends ISpring{
     }
 }
 
+// Vert similar to Hookes Law minus mass
+class Tension extends ISpring{
+    // #region MAIN
+    constructor( props={} ){
+        super();
+        
+        this.props.k = 1; // Spring Constant
+        
+        if( props ) this.loadConfig( props );
+    }
+    // #endregion
+
+    update( dt ){
+        // a = -tension * ( pos - to ) / mass;
+		// vel += ( a - damping * vel ) * dt;
+        const damp  = this.props.damp;
+        const k     = this.props.k;
+
+        this.vel[0] += ( -k * ( this.pos[ 0 ] - this.tpos[ 0 ] ) - damp * this.vel[0] ) * dt;
+		this.vel[1] += ( -k * ( this.pos[ 1 ] - this.tpos[ 1 ] ) - damp * this.vel[1] ) * dt;
+		this.vel[2] += ( -k * ( this.pos[ 2 ] - this.tpos[ 2 ] ) - damp * this.vel[2] ) * dt;
+
+		this.pos[0] += this.vel[ 0 ] * dt;
+		this.pos[1] += this.vel[ 1 ] * dt;
+		this.pos[2] += this.vel[ 2 ] * dt;
+
+		return this;
+    }
+}
 
 </script></body></html>
