@@ -28,13 +28,23 @@ window.addEventListener( "load", async _=>{
         // .setSpring( HookesLaw, { mass:1, k:2, damp:1.0 } )               // Same for all points
         // .setSpring( HookesLaw, { mass:1, k:[ 3, 10 ], damp:1.0 } )       // Lerp Range for K
         // .setSpring( HookesLaw, { mass:1, k:[ 1, 10, 1 ], damp:1.0 } )    // Individual Setting of K
+        // .setSpring( Tension, { k:[5,10], damp:0.4 } )
+        // .setSpring( Framerate, { k:5, scl:2, rate:30, damp:1.0  } )
+        // .setSpring( DamperExp, { ft:0.99 } )
+        // .setSpring( DamperHalfLife, { halfLifeTime:0.1 } )
+        // .setSpring( DamperHalfLifeExp, { halfLifeTime:0.1 } )
+        // .setSpring( DamperCritical, { halfLifeTime:[0.05,0.18] } )
+        .setSpring( Damper, {  } )
+        
 
-        .setSpring( Tension, { k:[5,10], damp:0.4 } )
-
-        .debug();
+        // .setSpring( ImplicitEuler, { osc:1, damp:[0.3, 0.5] } )
+        // .setSpring( SemiImplicitEuler, { osc:1, damp:[0.3, 0.5] } )
+        
+        
 
     // console.log( Ref.tester.chain.items );
-
+    
+    Ref.tester.chain.items.forEach( i=>console.log( i.spring.props ) );
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     App.createRenderLoop( onPreRender ).start();
     // App.renderLoop();
@@ -88,8 +98,10 @@ class ISpring{
                     if( v.length === 2 ) this.props[ k ] = v[ 0 ] * ti + v[ 1 ] * t;
                     // Specific index assignment
                     else                 this.props[ k ] = v[ Math.floor( t * ( v.length - 1 ) ) ];
-                
-                }else this.props[ k ] = v;
+
+                }else{
+                    this.props[ k ] = v;
+                }
             }else{
                 console.log( 'Spring property does not exist: ', k );
             }
@@ -331,7 +343,7 @@ class HookesLaw extends ISpring{
     }
 }
 
-// Vert similar to Hookes Law minus mass
+// Acceleration from Tension - Very similar to Hookes Law minus mass
 class Tension extends ISpring{
     // #region MAIN
     constructor( props={} ){
@@ -358,6 +370,381 @@ class Tension extends ISpring{
 		this.pos[2] += this.vel[ 2 ] * dt;
 
 		return this;
+    }
+}
+
+class Framerate extends ISpring{
+    // #region MAIN
+    constructor( props={} ){
+        super();
+        
+        this.props.k    = 1;  // Spring Constant
+        this.props.scl  = 1;  // Time Scalar
+        this.props.rate = 60; // Framerate
+        
+        if( props ) this.loadConfig( props );
+    }
+    // #endregion
+
+    update( dt ){
+        // dt   *= scale;
+        // accel = -stiffness * ( at - to );
+        // vel   = ( vel + accel * dt ) * Math.pow( 1 - damping / frameRate, frameRate * dt ); 
+        // pos  += vel * dt;
+
+        const sdt       = dt * this.props.scl;
+        const rate      = this.props.rate;
+        const k         = this.props.k;
+        const damp      = Math.pow( 1 - this.props.damp / rate, rate * sdt );
+        const tension   = -this.props.k * sdt
+
+        this.vel[0]     = ( this.vel[ 0 ] + ( this.pos[ 0 ] - this.tpos[ 0 ] ) * tension ) * damp;
+        this.vel[1]     = ( this.vel[ 1 ] + ( this.pos[ 1 ] - this.tpos[ 1 ] ) * tension ) * damp;
+        this.vel[2]     = ( this.vel[ 2 ] + ( this.pos[ 2 ] - this.tpos[ 2 ] ) * tension ) * damp;
+
+        this.pos[0]    += this.vel[ 0 ] * sdt;
+        this.pos[1]    += this.vel[ 1 ] * sdt;
+        this.pos[2]    += this.vel[ 2 ] * sdt;
+
+        return this;
+    }
+}
+
+// https://theorangeduck.com/page/spring-roll-call#exactdamper
+class DamperExp extends ISpring{
+    constructor( props={} ){
+        super();
+        // NOTE:: props.damp should not exceed 1
+        this.props.ft = 0.999;  // Fixed Timeskip, must be < 1
+        if( props ) this.loadConfig( props );
+    }
+
+    update( dt ){
+        const ft    = this.props.ft;
+        const damp  = this.props.damp;
+        const t     = 1.0 - Math.pow( 1.0 / ( 1.0 - ft * damp ), -dt / ft );
+        const ti    = 1 - t;
+
+        this.pos[ 0 ] = this.pos[ 0 ] * ti + this.tpos[ 0 ] * t;
+        this.pos[ 1 ] = this.pos[ 1 ] * ti + this.tpos[ 1 ] * t;
+        this.pos[ 2 ] = this.pos[ 2 ] * ti + this.tpos[ 2 ] * t;
+        return this;
+    }
+}
+
+// https://theorangeduck.com/page/spring-roll-call#exactdamper
+class DamperHalfLife extends ISpring{
+    constructor( props={} ){
+        super();
+        this.props.halfLifeTime = 0.1; // time it takes for the distance to the target to reduce by half:
+        if( props ) this.loadConfig( props );
+    }
+
+    update( dt ){
+        const t  = 1.0 - Math.pow( 2, -dt / this.props.halfLifeTime );
+        const ti = 1 - t;
+
+        this.pos[ 0 ] = this.pos[ 0 ] * ti + this.tpos[ 0 ] * t;
+        this.pos[ 1 ] = this.pos[ 1 ] * ti + this.tpos[ 1 ] * t;
+        this.pos[ 2 ] = this.pos[ 2 ] * ti + this.tpos[ 2 ] * t;
+        return this;
+    }
+}
+
+// https://theorangeduck.com/page/spring-roll-call#exactdamper
+function fastNegExp( x ){ return 1 / (1 + x + 0.48*x*x + 0.235*x*x*x); }
+function copySign( x, y ){ return Math.sign(x) === Math.sign(y) ? x : -x; };
+function fastAtan( x ){
+    const z     = Math.abs( x );
+    const w     = ( z > 1 )? 1 / z : z;
+    const y     = ( Math.PI / 4 ) * w - w*(w - 1) * ( 0.2447 + 0.0663 * w );
+    const rtn   = ( z > 1 )? Math.PI / 2 - y : y;
+    return copySign( rtn, x ); // copysign( (z > 1)? Math.PI / 2.0 - y : y, x );
+}
+class DamperHalfLifeExp extends ISpring{
+    constructor( props={} ){
+        super();
+        this.props.halfLifeTime = 0.1; // time it takes for the distance to the target to reduce by half:
+        if( props ) this.loadConfig( props );
+    }
+
+    update( dt ){
+        // log(2) = 0.69314718056
+        const eps = 1e-5; // Add a tiny epsilon to prevent division by zero
+        const t   = 1 - fastNegExp( ( 0.69314718056 * dt ) / ( this.props.halfLifeTime + eps ) );
+        const ti  = 1 - t;
+
+        this.pos[ 0 ] = this.pos[ 0 ] * ti + this.tpos[ 0 ] * t;
+        this.pos[ 1 ] = this.pos[ 1 ] * ti + this.tpos[ 1 ] * t;
+        this.pos[ 2 ] = this.pos[ 2 ] * ti + this.tpos[ 2 ] * t;
+        return this;
+    }
+}
+
+// https://theorangeduck.com/page/spring-roll-call#critical
+// simple_spring_damper_exact
+class DamperCritical extends ISpring{
+    delta = [0,0,0];
+    accel = [0,0,0];
+    constructor( props={} ){
+        super();
+        this.props.halfLifeTime = 0.1; // time it takes for the distance to the target to reduce by half:
+        if( props ) this.loadConfig( props );
+    }
+
+    loadConfig( props, t=0 ){
+        super.loadConfig( props, t );
+        // For math, need to include division by 2 ( * 0.5 )
+        this.props.damp = ( 4.0 * 0.69314718056 ) / ( this.props.halfLifeTime + 1e-5 ) * 0.5;
+        return this;
+    }
+
+    update( dt ){
+        // const j0   = pos - target;
+        // const j1   = vel + j0 * damp;
+        // const eydt = fastNegExp( damp * dt );
+        // value      = eydt * ( j0 + j1 * dt ) + target;
+        // vel        = eydt * ( vel - j1 * damp * dt );
+        const damp      = this.props.damp;
+        const eydt      = fastNegExp( damp * dt );
+
+        this.delta[ 0 ] = this.pos[ 0 ] - this.tpos[ 0 ];
+        this.delta[ 1 ] = this.pos[ 1 ] - this.tpos[ 1 ];
+        this.delta[ 2 ] = this.pos[ 2 ] - this.tpos[ 2 ];
+
+        this.accel[ 0 ] = this.vel[ 0 ] + this.delta[ 0 ] * damp;
+        this.accel[ 1 ] = this.vel[ 1 ] + this.delta[ 1 ] * damp;
+        this.accel[ 2 ] = this.vel[ 2 ] + this.delta[ 2 ] * damp;
+
+        this.pos[ 0 ]   = eydt * ( this.delta[ 0 ] + this.accel[ 0 ] * dt ) + this.tpos[ 0 ];
+        this.pos[ 1 ]   = eydt * ( this.delta[ 1 ] + this.accel[ 1 ] * dt ) + this.tpos[ 1 ];
+        this.pos[ 2 ]   = eydt * ( this.delta[ 2 ] + this.accel[ 2 ] * dt ) + this.tpos[ 2 ];
+
+        this.vel[ 0 ]   = eydt * ( this.vel[ 0 ] - this.accel[ 0 ] * damp * dt );
+        this.vel[ 1 ]   = eydt * ( this.vel[ 1 ] - this.accel[ 1 ] * damp * dt );
+        this.vel[ 2 ]   = eydt * ( this.vel[ 2 ] - this.accel[ 2 ] * damp * dt );
+
+        return this;
+    }
+}
+
+// https://www.ryanjuckett.com/damped-springs/
+class Damper extends ISpring{
+    // #region MAIN
+    m_posPosCoef = 0;
+    m_posVelCoef = 0;
+    m_velPosCoef = 0;
+    m_velVelCoef = 0;
+    constructor( props={} ){
+        super();
+        this.props.damp = 1;
+        this.props.freq = 8;
+        if( props ) this.loadConfig( props );
+    }
+    // #endregion
+
+    update( dt ){
+        const damp = this.props.damp;
+
+        if( damp > 1 )          this.overDamped( dt );
+        else if( damp < 1.0 )   this.underDamped( dt );
+        else                    this.criticalDamped( dt );
+
+        const x         = this.pos[0] - this.tpos[ 0 ];
+        const y         = this.pos[1] - this.tpos[ 1 ];
+        const z         = this.pos[2] - this.tpos[ 2 ];
+
+        this.pos[ 0 ]   = x * this.posPosCoef + this.vel[ 0 ] * this.posVelCoef + this.tpos[ 0 ];
+        this.pos[ 1 ]   = y * this.posPosCoef + this.vel[ 1 ] * this.posVelCoef + this.tpos[ 1 ];
+        this.pos[ 2 ]   = z * this.posPosCoef + this.vel[ 2 ] * this.posVelCoef + this.tpos[ 2 ];
+
+        this.vel[ 0 ]   = x * this.velPosCoef + this.vel[ 0 ] * this.velVelCoef;
+        this.vel[ 1 ]   = y * this.velPosCoef + this.vel[ 1 ] * this.velVelCoef;
+        this.vel[ 2 ]   = z * this.velPosCoef + this.vel[ 2 ] * this.velVelCoef;
+
+        return this;
+    }
+
+    // #region DAMPING 
+    overDamped( dt ){
+        const za    = -this.props.freq * this.props.damp;
+        const zb    = this.props.freq * Math.sqrt( this.props.damp**2 - 1 );
+        const z1    = za - zb;
+        const z2    = za + zb;
+        const i2Zb  = 1.0 / ( 2.0 * zb ); // = 1 / (z2 - z1)    
+        const e1    = Math.exp( z1 * dt );
+        const e2    = Math.exp( z2 * dt );
+
+        const e1_Over_TwoZb     = e1 * i2Zb;
+        const e2_Over_TwoZb     = e2 * i2Zb;
+        const z1e1_Over_TwoZb   = z1 * e1_Over_TwoZb;
+        const z2e2_Over_TwoZb   = z2 * e2_Over_TwoZb;
+
+        this.posPosCoef = e1_Over_TwoZb * z2 - z2e2_Over_TwoZb + e2;
+        this.posVelCoef = -e1_Over_TwoZb + e2_Over_TwoZb;
+        this.velPosCoef = ( z1e1_Over_TwoZb - z2e2_Over_TwoZb + e2 ) * z2;
+        this.velVelCoef = -z1e1_Over_TwoZb + z2e2_Over_TwoZb;
+    }
+
+    underDamped( dt ){
+        const omegaZeta = this.props.freq * this.props.damp;
+        const alpha     = this.props.freq * Math.sqrt( 1.0 - this.props.damp**2 );
+        const expTerm   = Math.exp( -omegaZeta * dt );
+        const cosTerm   = Math.cos( alpha * dt );
+        const sinTerm   = Math.sin( alpha * dt );
+        const invAlpha  = 1.0 / alpha;
+
+        const expSin    = expTerm * sinTerm;
+        const expCos    = expTerm * cosTerm;
+        const expOmega  = expTerm * omegaZeta * sinTerm * invAlpha;
+
+        this.posPosCoef = expCos + expOmega;
+        this.posVelCoef = expSin * invAlpha;
+        this.velPosCoef = -expSin * alpha - omegaZeta * expOmega;
+        this.velVelCoef = expCos - expOmega;
+    }
+
+    criticalDamped( dt ){
+        const expTerm   = Math.exp( -this.props.freq * dt );
+        const dtExp     = dt * expTerm;
+        const dtExpFreq = dtExp * this.props.freq;
+
+        this.posPosCoef = dtExpFreq + expTerm;
+        this.posVelCoef = dtExp;
+        this.velPosCoef = -this.props.freq * dtExpFreq;
+        this.velVelCoef = -dtExpFreq + expTerm;
+    }
+    // #endregion
+}
+
+// http://box2d.org/files/GDC2011/GDC2011_Catto_Erin_Soft_Constraints.pdf
+// http://allenchou.net/2015/04/game-math-precise-control-over-numeric-springing/
+// http://allenchou.net/2015/04/game-math-more-on-numeric-springing/
+
+function applyDamping( o ){
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Compute some values
+
+    // Oscillation per second, can do fractions of pi to slow down the speed of spring
+    // So a value means 1 complete cycle per second.
+    o.osc_ps = Math.PI * 2 * o.props.osc;
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Handle various possible damping controls
+    if( o.props.dampTime ){
+        // Damp Time in seconds. Damp of 0.5 set at 2 seconds means
+        // that for every 2 seconds, about 0.5 damping has been applied
+        o.damp = Math.log( o.props.damp ) / ( -o.osc_ps * o.props.dampTime );
+
+    }else if( o.props.halfLifeTime ){
+        // HalfLife Damping - Reduce oscillation by half in X amount of seconds
+        // zeta = -ln( 0.5f ) / ( omega * lambda )
+        o.damp = 0.6931472 / ( o.osc_ps * o.props.halfLifeTime );
+    
+    }else if( o.props.expoTime ){
+        // Critical Damping with a speed control of how fast the cycle to run
+        // -Log( 0.5 ) in terms of OCS its 39.7 degrees over time
+        o.osc_ps  = 0.6931472 / o.props.expoTime; 
+        o.damp    = 1;
+
+    }else{
+        // Raw damp value between 0 amd 1
+        o.damp = o.props.damp;
+    }
+}
+
+class ImplicitEuler extends ISpring{
+    // #region MAIN
+    osc_ps = 0; // Oscillation Per Second ( Math.PI * 2 * i ) ////: 0 < i < 10
+    damp   = 0; // Final dammping value depending on the various options
+    
+    constructor( props={} ){
+        super();
+        
+        this.props.osc          = 1; // Oscillation Time
+        this.props.dampTime     = 0; // Apply a time cycle to damping
+        this.props.halfLifeTime = 0; // Apply time to half life damping
+        this.props.expoTime     = 0; // Critical Damping with time
+        
+        if( props ) this.loadConfig( props );
+    }
+    // #endregion
+
+    loadConfig( props, t=0 ){
+        super.loadConfig( props, t );
+        applyDamping( this );
+        return this;
+    }
+
+    update( dt ){
+        /*
+		f       = 1.0 + 2.0 * dt * damp_ratio * osc_ps,
+		dt_osc	= dt * osc_ps * osc_ps,
+		dt2_osc	= dt * dt_osc,
+		det_inv	= 1.0 / (f + dt2_osc),
+		det_pos	= f * pos + dt * vel + dt2_osc * to,
+		det_vel	= vel + dt_osc * (to - pos);
+		vel 	= det_vel * det_inv;
+        pos 	= det_pos * det_inv;
+		*/
+
+        const friction = 1.0 + 2.0 * dt * this.damp * this.osc_ps;
+        const dt_osc2  = dt * this.osc_ps**2;
+        const dt2_osc2 = dt * dt_osc2;
+        const detInv   = 1.0 / ( friction + dt2_osc2 );
+
+        this.vel[ 0 ] = ( this.vel[ 0 ] + dt_osc2 * ( this.tpos[ 0 ] - this.pos[ 0 ] ) ) * detInv;
+        this.vel[ 1 ] = ( this.vel[ 1 ] + dt_osc2 * ( this.tpos[ 1 ] - this.pos[ 1 ] ) ) * detInv;
+        this.vel[ 2 ] = ( this.vel[ 2 ] + dt_osc2 * ( this.tpos[ 2 ] - this.pos[ 2 ] ) ) * detInv;
+
+        this.pos[ 0 ] = ( friction * this.pos[ 0 ] + dt * this.vel[ 0 ] + dt2_osc2 * this.tpos[ 0 ] ) * detInv;
+        this.pos[ 1 ] = ( friction * this.pos[ 1 ] + dt * this.vel[ 1 ] + dt2_osc2 * this.tpos[ 1 ] ) * detInv;
+        this.pos[ 2 ] = ( friction * this.pos[ 2 ] + dt * this.vel[ 2 ] + dt2_osc2 * this.tpos[ 2 ] ) * detInv;
+
+        return this;
+    }
+}
+
+// A Cheaper version of ImplicitEuler with some limitions
+// -- OSC no higher then 10 else can make things unstable
+class SemiImplicitEuler extends ISpring{
+    // #region MAIN
+    osc_ps = 0; // Oscillation Per Second ( Math.PI * 2 * i ) : 0 < i < 10
+    damp   = 0; // Final dammping value depending on the various options
+    
+    constructor( props={} ){
+        super();
+        
+        this.props.osc          = 1; // Oscillation Time
+        this.props.dampTime     = 0; // Apply a time cycle to damping
+        this.props.halfLifeTime = 0; // Apply time to half life damping
+        this.props.expoTime     = 0; // Critical Damping with time
+        
+        if( props ) this.loadConfig( props );
+    }
+    // #endregion
+
+    loadConfig( props, t=0 ){
+        super.loadConfig( props, t );
+        applyDamping( this );
+        return this;
+    }
+
+    update( dt ){
+        //  vel += -2.0 * dt * damp_ratio * osc_ps * vel + dt * osc_ps * osc_ps * (to - pos);
+        //  pos += dt * vel;
+        const damp     = -2.0 * dt * this.damp * this.osc_ps;
+        const osc      = dt * this.osc_ps**2;
+
+        this.vel[ 0 ] += damp * this.vel[ 0 ] + osc * ( this.tpos[ 0 ] - this.pos[ 0 ] );
+        this.vel[ 1 ] += damp * this.vel[ 1 ] + osc * ( this.tpos[ 1 ] - this.pos[ 1 ] );
+        this.vel[ 2 ] += damp * this.vel[ 2 ] + osc * ( this.tpos[ 2 ] - this.pos[ 2 ] );
+
+        this.pos[ 0 ] += dt * this.vel[ 0 ];
+        this.pos[ 1 ] += dt * this.vel[ 1 ];
+        this.pos[ 2 ] += dt * this.vel[ 2 ];
+
+        return this;
     }
 }
 
