@@ -45,7 +45,7 @@ window.addEventListener( 'load', async _=>{
     const gltf = await Gltf2.fetch( '/prototypes/_res/anim/mixamo/Catwalk.gltf' );
     const arm  = parseArmature( gltf );
     const clip = GltfUtil.loadAnimationClip( gltf, null, arm.bindPose );
-    
+
     const retarget = new IKBipedRetarget();
     retarget
         .setSourceTPose( arm.bindPose ) // TPose for the clip animation
@@ -219,9 +219,75 @@ class IKBipedRig extends IKRig {
             this.setSpine( bMap.getBoneNames( [ 'spine' ] ) );
             this.setHead( bMap.getBoneNames( [ 'head' ] ) );
             this.setHip( bMap.getBoneNames( [ 'hip' ] ) );
+            this.setFingerThumbL( bMap.getBoneNames( [ "finger_thumb1_l", "finger_thumb2_l", "finger_thumb3_l"] ) );
+            this.setFingerThumbR( bMap.getBoneNames( [ "finger_thumb1_r", "finger_thumb2_r", "finger_thumb3_r"] ) );
+            this.setFingerIndexL( bMap.getBoneNames( [ "finger_index1_l", "finger_index2_l", "finger_index3_l"] ) );
+            this.setFingerIndexR( bMap.getBoneNames( [ "finger_index1_r", "finger_index2_r", "finger_index3_r"] ) );
+            this.setFingerMiddleL( bMap.getBoneNames( [ "finger_middle1_l", "finger_middle2_l", "finger_middle3_l"] ) );
+            this.setFingerMiddleR( bMap.getBoneNames( [ "finger_middle1_r", "finger_middle2_r", "finger_middle3_r"] ) );
+            this.setFingerRingL( bMap.getBoneNames( [ "finger_ring1_l", "finger_ring2_l", "finger_ring3_l"] ) );
+            this.setFingerRingR( bMap.getBoneNames( [ "finger_ring1_r", "finger_ring2_r", "finger_ring3_r"] ) );
+            this.setFingerPinkyL( bMap.getBoneNames( [ "finger_pinky1_l", "finger_pinky2_l", "finger_pinky3_l"] ) );
+            this.setFingerPinkyR( bMap.getBoneNames( [ "finger_pinky1_r", "finger_pinky2_r", "finger_pinky3_r"] ) );
+
         }
     }
     // #endregion
+
+    get fingerThumbL(){ return this.sets[ this.names[ 'finger_thumb_l' ] ]; }
+    setFingerThumbL( bones ){
+        if( bones ) this.addSet( { name: 'finger_thumb_l', solver: 'swingchain', bones: bones, axes: BoneAxes.FUR, order: 12 } );
+        return this;
+    }
+
+    get fingerThumbR(){ return this.sets[ this.names[ 'finger_thumb_r' ] ]; }
+    setFingerThumbR( bones ){
+        if( bones ) this.addSet( { name: 'finger_thumb_r', solver: 'swingchain', bones: bones, axes: BoneAxes.FUR, order: 12 } );
+        return this;
+    }
+
+    get fingerIndexL(){ return this.sets[ this.names[ 'finger_index_l' ] ]; }
+    setFingerIndexL( bones ){
+        if( bones ) this.addSet( { name: 'finger_index_l', solver: 'swingchain', bones: bones, axes: BoneAxes.FUR, order: 12 } );
+        return this;
+    }
+    get fingerIndexR(){ return this.sets[ this.names[ 'finger_index_r' ] ]; }
+    setFingerIndexR( bones ){
+        if( bones ) this.addSet( { name: 'finger_index_r', solver: 'swingchain', bones: bones, axes: BoneAxes.FUR, order: 12 } );
+        return this;
+    }
+
+    get fingerMiddleL(){ return this.sets[ this.names[ 'finger_middle_l' ] ]; }
+    setFingerMiddleL( bones ){
+        if( bones ) this.addSet( { name: 'finger_middle_l', solver: 'swingchain', bones: bones, axes: BoneAxes.FUR, order: 12 } );
+        return this;
+    }
+
+    get fingerMiddleR(){ return this.sets[ this.names[ 'finger_middle_r' ] ]; }
+    setFingerMiddleR( bones ){
+        if( bones ) this.addSet( { name: 'finger_middle_r', solver: 'swingchain', bones: bones, axes: BoneAxes.FUR, order: 12 } );
+        return this;
+    }
+    get fingerRingL(){ return this.sets[ this.names[ 'finger_ring_l' ] ]; }
+    setFingerRingL( bones ){
+        if( bones ) this.addSet( { name: 'finger_ring_l', solver: 'swingchain', bones: bones, axes: BoneAxes.FUR, order: 12 } );
+        return this;
+    }
+    get fingerRingR(){ return this.sets[ this.names[ 'finger_ring_r' ] ]; }
+    setFingerRingR( bones ){
+        if( bones ) this.addSet( { name: 'finger_ring_r', solver: 'swingchain', bones: bones, axes: BoneAxes.FUR, order: 12 } );
+        return this;
+    }
+    get fingerPinkyL(){ return this.sets[ this.names[ 'finger_pinky_l' ] ]; }
+    setFingerPinkyL( bones ){
+        if( bones ) this.addSet( { name: 'finger_pinky_l', solver: 'swingchain', bones: bones, axes: BoneAxes.FUR, order: 12 } );
+        return this;
+    }
+    get fingerPinkyR(){ return this.sets[ this.names[ 'finger_pinky_r' ] ]; }
+    setFingerPinkyR( bones ){
+        if( bones ) this.addSet( { name: 'finger_pinky_r', solver: 'swingchain', bones: bones, axes: BoneAxes.FUR, order: 12 } );
+        return this;
+    }
 
     // #region ARM CHAINS
     get leftArm(){ return this.sets[ this.names[ 'arm_l' ] ]; }
@@ -364,7 +430,18 @@ class IKBipedRetarget {
 
         this.#computeSwingTwist( rig.leftHand.chain,  ikp.handL );
         this.#computeSwingTwist( rig.rightHand.chain, ikp.handR );
-        
+
+        this.#computeFinger( rig.fingerThumbL.chain, ikp.fingerThumbL );
+        this.#computeFinger( rig.fingerThumbR.chain, ikp.fingerThumbR );
+        this.#computeFinger( rig.fingerIndexL.chain, ikp.fingerIndexL );
+        this.#computeFinger( rig.fingerIndexR.chain, ikp.fingerIndexR );
+        this.#computeFinger( rig.fingerMiddleL.chain, ikp.fingerMiddleL );
+        this.#computeFinger( rig.fingerMiddleR.chain, ikp.fingerMiddleR );
+        this.#computeFinger( rig.fingerRingL.chain, ikp.fingerRingL );
+        this.#computeFinger( rig.fingerRingR.chain, ikp.fingerRingR );
+        this.#computeFinger( rig.fingerPinkyL.chain, ikp.fingerPinkyL );
+        this.#computeFinger( rig.fingerPinkyR.chain, ikp.fingerPinkyR );
+
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         // HIP / ROOT
         this.#computeSwingTwist( rig.hip.chain, ikp.hip );
@@ -406,7 +483,25 @@ class IKBipedRetarget {
 
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         // End Axes
-        lnk = chain.lastLink;
+
+        lnk = chain.lastLink; // Get the second to last link
+        b   = this.rig.pose.bones[ lnk.index ];
+        out.endSwing.fromQuat( b.world.rot, lnk.axes.swing ).norm();
+        out.endTwist.fromQuat( b.world.rot, lnk.axes.twist ).norm();
+    }
+
+    #computeFinger( chain, out ){
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // Start Axes
+        let lnk = chain.firstLink;
+        let b   = this.rig.pose.bones[ lnk.index ];
+        out.startSwing.fromQuat( b.world.rot, lnk.axes.swing ).norm();
+        out.startTwist.fromQuat( b.world.rot, lnk.axes.twist ).norm();
+
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // End Axes
+
+        lnk = chain.links[ chain.links.length - 2 ]; // Get the second to last link
         b   = this.rig.pose.bones[ lnk.index ];
         out.endSwing.fromQuat( b.world.rot, lnk.axes.swing ).norm();
         out.endTwist.fromQuat( b.world.rot, lnk.axes.twist ).norm();
@@ -466,6 +561,37 @@ class IKBipedRetarget {
 
         rig.rightArm.target.setDirections( ikp.armR.swing, ikp.armR.twist, ikp.armR.lenScale );
         rig.rightHand.target.setDirections( ikp.handR.swing, ikp.handR.twist );
+
+        rig.fingerThumbL.target
+            .setDirections( ikp.fingerThumbL.startSwing, ikp.fingerThumbL.startTwist )
+            .setAltDirections( ikp.fingerThumbL.endSwing, ikp.fingerThumbL.endTwist );
+        rig.fingerThumbR.target
+            .setDirections( ikp.fingerThumbR.startSwing, ikp.fingerThumbR.startTwist )
+            .setAltDirections( ikp.fingerThumbR.endSwing, ikp.fingerThumbR.endTwist );
+        rig.fingerIndexL.target
+            .setDirections( ikp.fingerIndexL.startSwing, ikp.fingerIndexL.startTwist )
+            .setAltDirections( ikp.fingerIndexL.endSwing, ikp.fingerIndexL.endTwist );
+        rig.fingerIndexR.target
+            .setDirections( ikp.fingerIndexR.startSwing, ikp.fingerIndexR.startTwist )
+            .setAltDirections( ikp.fingerIndexR.endSwing, ikp.fingerIndexR.endTwist );
+        rig.fingerMiddleL.target
+            .setDirections( ikp.fingerMiddleL.startSwing, ikp.fingerMiddleL.startTwist )
+            .setAltDirections( ikp.fingerMiddleL.endSwing, ikp.fingerMiddleL.endTwist );
+        rig.fingerMiddleR.target
+            .setDirections( ikp.fingerMiddleR.startSwing, ikp.fingerMiddleR.startTwist )
+            .setAltDirections( ikp.fingerMiddleR.endSwing, ikp.fingerMiddleR.endTwist );
+        rig.fingerRingL.target
+            .setDirections( ikp.fingerRingL.startSwing, ikp.fingerRingL.startTwist )
+            .setAltDirections( ikp.fingerRingL.endSwing, ikp.fingerRingL.endTwist );
+        rig.fingerRingR.target
+            .setDirections( ikp.fingerRingR.startSwing, ikp.fingerRingR.startTwist )
+            .setAltDirections( ikp.fingerRingR.endSwing, ikp.fingerRingR.endTwist );
+        rig.fingerPinkyL.target
+            .setDirections( ikp.fingerPinkyL.startSwing, ikp.fingerPinkyL.startTwist )
+            .setAltDirections( ikp.fingerPinkyL.endSwing, ikp.fingerPinkyL.endTwist );
+        rig.fingerPinkyR.target
+            .setDirections( ikp.fingerPinkyR.startSwing, ikp.fingerPinkyR.startTwist )
+            .setAltDirections( ikp.fingerPinkyR.endSwing, ikp.fingerPinkyR.endTwist );
 
         return this;
     }
@@ -633,6 +759,16 @@ class IKBipedPose {
     footL   = { swing:new Vec3(), twist:new Vec3() };
     handR   = { swing:new Vec3(), twist:new Vec3() };
     handL   = { swing:new Vec3(), twist:new Vec3() };
+    fingerThumbL =  { startSwing:new Vec3(), startTwist:new Vec3(), endSwing:new Vec3(), endTwist:new Vec3() };
+    fingerThumbR =  { startSwing:new Vec3(), startTwist:new Vec3(), endSwing:new Vec3(), endTwist:new Vec3() };
+    fingerIndexL =  { startSwing:new Vec3(), startTwist:new Vec3(), endSwing:new Vec3(), endTwist:new Vec3() };
+    fingerIndexR =  { startSwing:new Vec3(), startTwist:new Vec3(), endSwing:new Vec3(), endTwist:new Vec3() };
+    fingerMiddleL = { startSwing:new Vec3(), startTwist:new Vec3(), endSwing:new Vec3(), endTwist:new Vec3() };
+    fingerMiddleR = { startSwing:new Vec3(), startTwist:new Vec3(), endSwing:new Vec3(), endTwist:new Vec3() };
+    fingerRingL =   { startSwing:new Vec3(), startTwist:new Vec3(), endSwing:new Vec3(), endTwist:new Vec3() };
+    fingerRingR =   { startSwing:new Vec3(), startTwist:new Vec3(), endSwing:new Vec3(), endTwist:new Vec3() };
+    fingerPinkyL =  { startSwing:new Vec3(), startTwist:new Vec3(), endSwing:new Vec3(), endTwist:new Vec3() };
+    fingerPinkyR =  { startSwing:new Vec3(), startTwist:new Vec3(), endSwing:new Vec3(), endTwist:new Vec3() };
     constructor(){}
 }
 

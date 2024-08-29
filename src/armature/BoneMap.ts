@@ -137,7 +137,7 @@ class BoneParse {
         if( reExclude ) this.reExclude = new RegExp( reExclude, 'i' );
     }
 
-    test( bname: string ): string | null{ 
+    test( bname: string ): string | null{
         if( !this.reFind.test( bname ) )                     return null;
         if( this.reExclude && this.reExclude.test( bname ) ) return null;
 
@@ -165,7 +165,23 @@ const Parsers   = [
     new BoneParse( 'neck',      false, 'neck' ),
     new BoneParse( 'hip',       false, 'hips*|pelvis' ),
     new BoneParse( 'root',      false, 'root' ),
+    new BoneParse("finger_thumb1", true, "thumb1|thumb.*1", undefined, false),
+    new BoneParse("finger_index1", true, "index1|index.*1", undefined, false),
+    new BoneParse("finger_middle1", true, "middle1|middle.*1", undefined, false),
+    new BoneParse("finger_ring1", true, "ring1|ring.*1", undefined, false),
+    new BoneParse("finger_pinky1", true, "pinky1|pinky.*1", undefined, false),
 
+    new BoneParse("finger_thumb2", true, "thumb2|thumb.*2", undefined, false),
+    new BoneParse("finger_index2", true, "index2|index.*2", undefined, false),
+    new BoneParse("finger_middle2", true, "middle2|middle.*2", undefined, false),
+    new BoneParse("finger_ring2", true, "ring2|ring.*2", undefined, false),
+    new BoneParse("finger_pinky2", true, "pinky2|pinky.*2", undefined, false),
+
+    new BoneParse("finger_thumb3", true, "thumb3|thumb.*3", undefined, false),
+    new BoneParse("finger_index3", true, "index3|index.*3", undefined, false),
+    new BoneParse("finger_middle3", true, "middle3|middle.*3", undefined, false),
+    new BoneParse("finger_ring3", true, "ring3|ring.*3", undefined, false),
+    new BoneParse("finger_pinky3", true, "pinky3|pinky.*3", undefined, false),
     // eslint-disable-next-line no-useless-escape
     new BoneParse( 'spine',     false, 'spine.*\d*|chest', undefined, true ),
 ];
